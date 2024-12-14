@@ -1,6 +1,6 @@
 {
   "name": "stnl",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A validator format",
   "keywords": [],
   "license": "MIT",
@@ -22,5 +22,6 @@
     "mitata": "latest",
     "typescript": "latest",
     "typescript-eslint": "latest"
-  }
+  },
+  "homepage": "https://github.com/aquapi/stnl"
 }

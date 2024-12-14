@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import stringifyJson from '../src/compilers/stringify-json';
+import stringifyJson from '../lib/compilers/stringify-json';
 
 function build(schema) {
   const builder = [];
@@ -20,7 +20,6 @@ function createTest(label, schema, tests) {
 }
 
 createTest('Primitives', { type: 'int' }, [9, 16, 25, 90]);
-
 createTest('Objects', {
   props: {
     name: { type: 'string' },
