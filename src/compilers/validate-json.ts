@@ -7,6 +7,7 @@ export const loadSchema = (schema: TType, id: string, content: string[], refs: R
 
   loop: for (const key in schema) {
     if (key === 'type') {
+      // Handle primitives
       switch ((schema as TBasic | TString).type) {
         case 'bool':
           content.push(`typeof ${id}==='boolean'`);
@@ -31,7 +32,7 @@ export const loadSchema = (schema: TType, id: string, content: string[], refs: R
           break loop;
 
         case 'any':
-          content.push('true');
+          content.push(`typeof ${id}!=='undefined'`);
           break loop;
       }
     } else if (key === 'items') {
