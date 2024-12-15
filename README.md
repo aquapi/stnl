@@ -32,13 +32,11 @@ import validateJson from 'stnl/compilers/validate-json';
 import type { InferSchema, TSchema } from 'stnl';
 
 function buildValidator<T extends TSchema>(schema: T): (o: any) => o is InferSchema<T> {
-  const builder: string[] = [];
   const decls: string[][] = [];
+  const content = validateJson(schema, 'o', builder, decls);
 
-  validateJson(schema, 'o', builder, decls);
-
-  // eslint-disable-next-line
-  return Function(`${decls.map((decl, i) => `'use strict';var d${i + 1}=${decl.join('')};`).join('')}return (o)=>${builder.join('')};`)();
+  // Same stuff as what '@mapl/compiler' does
+  return Function(`'use strict';${decls.map((decl, i) => `var d${i + 1}=${decl.join('')};`).join('')}return (o)=>${content)};`)();
 }
 
 const isUser = buildValidator(User);

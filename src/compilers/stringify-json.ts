@@ -1,8 +1,7 @@
 import type { TType, TBasic, TString, TList, TObject, TTuple, TRef, TConst, TSchema } from '../index.js';
 
-export const loadSchema = (schema: TType, id: string, content: string[], refs: Record<string, string>, isAlreadyString: boolean): void => {
-  if (schema.nullable === true)
-    content.push(`${id}===null?'null':`);
+export const loadSchema = (schema: TType, id: string, refs: Record<string, string>, isAlreadyString: boolean): string => {
+  let str = schema.nullable === true ? `${id}===null?'null':` : '';
 
   for (const key in schema) {
     if (key === 'type') {
@@ -12,23 +11,17 @@ export const loadSchema = (schema: TType, id: string, content: string[], refs: R
         case 'float':
         case 'bool':
           // Don't do unnecessary castings
-          content.push(isAlreadyString ? id : `''+${id}`);
-          return;
+          return str + (isAlreadyString ? id : `''+${id}`);
 
         case 'any':
         case 'string':
-          content.push(`JSON.stringify(${id})`);
-          return;
+          return `${str}JSON.stringify(${id})`;
       }
     } else if (key === 'items') {
       // Handle arrays
-      content.push(`("[" + ${id}.map((o)=>`);
-      loadSchema((schema as TList).items, 'o', content, refs, true);
-      content.push(').join() + "]")');
-
-      return;
+      return `${str}("[" + ${id}.map((o)=>${loadSchema((schema as TList).items, 'o', refs, true)}).join() + "]")`;
     } else if (key === 'props' || key === 'optionalProps') {
-      content.push('"{"+(');
+      str += '"{"+(';
 
       // Optimal string concat
       let hasKeys = false;
@@ -37,10 +30,7 @@ export const loadSchema = (schema: TType, id: string, content: string[], refs: R
       let props = (schema as TObject).props;
       if (typeof props !== 'undefined') {
         for (const itemKey in props) {
-          content.push(`${hasKeys ? "+'," : "'"}"${itemKey}":'+(`);
-          loadSchema(props[itemKey], `${id}.${itemKey}`, content, refs, true);
-          content.push(')');
-
+          str += `${hasKeys ? "+'," : "'"}"${itemKey}":'+(${loadSchema(props[itemKey], `${id}.${itemKey}`, refs, true)})`;
           hasKeys = true;
         }
       }
@@ -51,73 +41,69 @@ export const loadSchema = (schema: TType, id: string, content: string[], refs: R
       props = (schema as TObject).optionalProps;
       if (typeof props !== 'undefined') {
         for (const itemKey in props) {
-          content.push(`${hasKeys ? '+' : ''}(typeof ${id}.${itemKey}==="undefined"?"":',"${itemKey}":'+(`);
-          loadSchema(props[itemKey], `${id}.${itemKey}`, content, refs, true);
-          content.push('))');
-
+          str += `${hasKeys ? '+' : ''}(typeof ${id}.${itemKey}==="undefined"?"":',"${itemKey}":'+(${loadSchema(props[itemKey], `${id}.${itemKey}`, refs, true)}))`;
           hasKeys = true;
         }
       }
 
       // Remove the leading ','
-      content.push(`)${hasRequiredKeys ? '' : '.slice(1)'}+"}"`);
-      return;
+      return `${str})${hasRequiredKeys ? '' : '.slice(1)'}+"}"`;
     } else if (key === 'const') {
       // Inline constants
-      content.push(typeof (schema as TConst).const === 'string'
+      return str + (typeof (schema as TConst).const === 'string'
         ? JSON.stringify((schema as TConst).const)
         : `"${(schema as TConst).const}"`);
-      break;
     } else if (key === 'ref') {
       // Search references
-      content.push(`${refs[(schema as TRef).ref]}(${id})`);
-      return;
+      return `${str}${refs[(schema as TRef).ref]}(${id})`;
     } else if (key === 'values') {
       // Handle tuples
       const schemas = (schema as TTuple).values;
 
-      content.push('"["+(');
-      loadSchema(schemas[0], `${id}[${0}]`, content, refs, true);
+      str += '"["+(';
+      str += loadSchema(schemas[0], `${id}[${0}]`, refs, true);
 
       for (let i = 1, l = schemas.length; i < l; i++) {
-        content.push(')+(');
-        loadSchema(schemas[i], `${id}[${i}]`, content, refs, true);
+        str += ')+(';
+        str += loadSchema(schemas[i], `${id}[${i}]`, refs, true);
       }
 
-      content.push(')+"]"');
-      return;
+      // eslint-disable-next-line
+      return str + ')+"]"';
     } else if (key === 'allOf' || key === 'anyOf') {
       // Ain't no way I'm compiling this shit
-      content.push(`JSON.stringify(${id})`);
-      return;
+      return `${str}JSON.stringify(${id})`;
     }
   }
+
+  // eslint-disable-next-line
+  return str + 'null';
 };
 
-export default (schema: TSchema, id: string, content: string[], decls: string[][]): void => {
+export default (schema: TSchema, id: string, decls: string[][]): string => {
   if (typeof schema.defs === 'undefined')
-    loadSchema(schema, id, content, null as unknown as Record<string, string>, false);
-  else {
-    const refs: Record<string, string> = {};
+    return loadSchema(schema, id, null as unknown as Record<string, string>, false);
 
-    if (typeof schema.defs !== 'undefined') {
-      const defs = schema.defs;
-      const schemas: [TType, string[]][] = [];
+  const refs: Record<string, string> = {};
 
-      // Initialize references first
-      let tmp: string[];
-      for (const key in defs) {
-        tmp = ['(o)=>'];
-        refs[key] = `d${decls.push(tmp)}`;
+  if (typeof schema.defs !== 'undefined') {
+    const defs = schema.defs;
+    const schemas: [TType, string[]][] = [];
 
-        // Store the string builder reference
-        schemas.push([defs[key], tmp]);
-      }
+    // Initialize references first
+    let tmp: string[];
+    for (const key in defs) {
+      // Load the reference to declarations first
+      tmp = ['(o)=>'];
+      refs[key] = `d${decls.push(tmp)}`;
 
-      // Then build the schemas
-      for (let i = 0, l = schemas.length; i < l; i++) loadSchema(schemas[i][0], 'o', schemas[i][1], refs, false);
+      // Store the string builder reference
+      schemas.push([defs[key], tmp]);
     }
 
-    loadSchema(schema, id, content, refs, false);
+    // Then build the schemas
+    for (let i = 0, l = schemas.length; i < l; i++) schemas[i][1][0] += loadSchema(schemas[i][0], 'o', refs, false);
   }
+
+  return loadSchema(schema, id, refs, false);
 };
