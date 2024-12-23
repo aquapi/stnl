@@ -1,7 +1,7 @@
 import type { TType, TBasic, TString, TList, TObject, TTuple, TIntersection, TUnion, TRef, TConst, TSchema } from '../index.js';
 import { compiler } from '../policy.js';
 
-export const loadSchema = (schema: TType, id: string, refs: Record<string, string>): string => {
+export const loadSchema = (schema: TType, id: string, refs: Record<string, number>): string => {
   let str = schema.nullable === true ? `(${id}===null||` : '';
 
   loop: for (const key in schema) {
@@ -66,7 +66,7 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, strin
       break;
     } else if (key === 'ref') {
       // Search references
-      str += `${refs[(schema as TRef).ref]}(${id})`;
+      str += `d${refs[(schema as TRef).ref]}(${id})`;
       break;
     } else if (key === 'values') {
       // Handle tuples
@@ -109,29 +109,22 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, strin
   return schema.nullable === true ? str + ')' : str;
 };
 
-export default (schema: TSchema, id: string, decls: string[][]): string => {
+export default (schema: TSchema, id: string, decls: string[]): string => {
   if (typeof schema.defs === 'undefined')
-    return loadSchema(schema, id, null as unknown as Record<string, string>);
+    return loadSchema(schema, id, null as unknown as Record<string, number>);
 
-  const refs: Record<string, string> = {};
+  const refs: Record<string, number> = {};
 
   if (typeof schema.defs !== 'undefined') {
     const defs = schema.defs;
-    const schemas: [TType, string[]][] = [];
+    const schemas: [TType, number][] = [];
 
     // Initialize references first
-    let tmp: string[];
-    for (const key in defs) {
-      // Load the references to declarations first
-      tmp = ['(o)=>'];
-      refs[key] = `d${decls.push(tmp)}`;
-
-      // Store the string builder reference
-      schemas.push([defs[key], tmp]);
-    }
+    for (const key in defs) schemas.push([defs[key], refs[key] = decls.push('')]);
 
     // Then build the schemas
-    for (let i = 0, l = schemas.length; i < l; i++) schemas[i][1][0] += loadSchema(schemas[i][0], 'o', refs);
+    // eslint-disable-next-line
+    for (let i = 0, l = schemas.length; i < l; i++) decls[schemas[i][1]] = '(o)=>' + loadSchema(schemas[i][0], 'o', refs);
   }
 
   return loadSchema(schema, id, refs);

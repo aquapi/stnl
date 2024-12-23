@@ -7,7 +7,7 @@ function build(schema) {
 
   // eslint-disable-next-line
   return Function(
-    `${decls.map((decl, i) => `'use strict';var d${i + 1}=${decl.join("")};`).join("")}return (o)=>${content};`,
+    `${decls.map((decl, i) => `'use strict';var d${i + 1}=${decl};`).join("")}return (o)=>${content};`,
   )();
 }
 
