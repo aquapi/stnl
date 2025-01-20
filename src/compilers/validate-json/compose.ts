@@ -1,5 +1,4 @@
-import type { TType, TBasic, TString, TList, TObject, TTuple, TIntersection, TUnion, TConst, TSchema, InferSchema } from '../../index.js';
-import { compiler } from '../../policy.js';
+import type { TType, TBasic, TString, TList, TObject, TTuple, TIntersection, TUnion, TConst, TSchema, InferSchema, TTaggedUnion } from '../../index.js';
 
 type Fn = (o: any) => boolean;
 type Refs = Record<string, Fn>;
@@ -24,12 +23,10 @@ export function loadSchemaWithoutNullable(schema: TType, refs: Refs): Fn {
         }
 
         case 'int':
-          return (o) => Number.isInteger(o);
+          return Number.isInteger;
 
         case 'float':
-          return compiler.nonFiniteFloat
-            ? (o) => typeof o === 'number'
-            : (o) => Number.isFinite(o);
+          return Number.isFinite;
 
         case 'any':
           return (o) => typeof o !== 'undefined';
@@ -52,7 +49,7 @@ export function loadSchemaWithoutNullable(schema: TType, refs: Refs): Fn {
         : Object.entries((schema as TObject).optionalProps!).map((kv) => [kv[0], loadSchema(kv[1], refs)]);
 
       return (o) => {
-        if (typeof o === 'object' && o !== null) return false;
+        if (typeof o !== 'object' || o === null) return false;
 
         let tmp: any;
 
@@ -66,6 +63,46 @@ export function loadSchemaWithoutNullable(schema: TType, refs: Refs): Fn {
         for (let i = 0; i < optionalPropsList.length; i++) {
           // eslint-disable-next-line
           tmp = o[optionalPropsList[i][0]];
+          if (typeof tmp !== 'undefined' && !optionalPropsList[i][1](tmp))
+            return false;
+        }
+
+        return true;
+      };
+    } else if (key === 'tag' || key === 'maps') {
+      const tag = (schema as TTaggedUnion).tag;
+      const maps = new Map(Object.entries((schema as TTaggedUnion).maps).map((tagVal) => [
+        tagVal[0], [
+          tagVal[1].props == null
+            ? []
+            : Object.entries(tagVal[1].props).map((kv) => [kv[0], loadSchema(kv[1], refs)] as const),
+
+          tagVal[1].optionalProps == null
+            ? []
+            : Object.entries(tagVal[1].optionalProps).map((kv) => [kv[0], loadSchema(kv[1], refs)] as const)
+        ] as const
+      ] as const));
+
+      return (o) => {
+        // eslint-disable-next-line
+        if (typeof o !== 'object' || o === null || typeof o[tag] !== 'string') return false;
+
+        // eslint-disable-next-line
+        const lists = maps.get(o[tag]);
+        if (typeof lists === 'undefined') return false;
+
+        let tmp: any;
+
+        for (let i = 0, propsList = lists[0]; i < propsList.length; i++) {
+          // eslint-disable-next-line
+          tmp = o[propsList[i][0]];
+          if (typeof tmp === 'undefined' || !propsList[i][1](tmp))
+            return false;
+        }
+
+        for (let i = 0, propsList = lists[1]; i < propsList.length; i++) {
+          // eslint-disable-next-line
+          tmp = o[propsList[i][0]];
           if (typeof tmp !== 'undefined' && !propsList[i][1](tmp))
             return false;
         }
@@ -76,6 +113,7 @@ export function loadSchemaWithoutNullable(schema: TType, refs: Refs): Fn {
       const c = (schema as TConst).const;
       return (o) => o === c;
     } else if (key === 'ref') {
+      // Lazy loading
       let fn: Fn | undefined;
       return (o) => (fn ??= refs[key])(o);
     } else if (key === 'values') {

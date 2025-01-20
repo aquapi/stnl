@@ -1,7 +1,22 @@
-import type { TType, TBasic, TString, TList, TObject, TTuple, TIntersection, TUnion, TRef, TConst, TSchema } from '../../index.js';
-import { compiler } from '../../policy.js';
+import type { TType, TBasic, TString, TList, TObject, TTuple, TIntersection, TUnion, TRef, TConst, TSchema, TTaggedUnion } from '../../index.js';
 
-export const loadSchema = (schema: TType, id: string, refs: Record<string, number>): string => {
+export const loadObjectProps = (schema: TObject, id: string, refs: Record<string, number>): string => {
+  let str = '';
+
+  // Required props
+  let props = schema.props;
+  if (typeof props !== 'undefined')
+    for (const itemKey in props) str += `&&(${loadSchema(props[itemKey], `${id}.${itemKey}`, refs)})`;
+
+  // Optional props
+  props = schema.optionalProps;
+  if (typeof props !== 'undefined')
+    for (const itemKey in props) str += `&&(typeof ${id}.${itemKey}==='undefined'||${loadSchema(props[itemKey], `${id}.${itemKey}`, refs)})`;
+
+  return str;
+};
+
+export function loadSchema(schema: TType, id: string, refs: Record<string, number>): string {
   let str = schema.nullable === true ? `(${id}===null||` : '';
 
   loop: for (const key in schema) {
@@ -27,7 +42,7 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, numbe
           break loop;
 
         case 'float':
-          str += compiler.nonFiniteFloat ? `typeof ${id}==='number'` : `Number.isFinite(${id})`;
+          str += `typeof ${id}==='number'`;
           break loop;
 
         case 'any':
@@ -49,16 +64,20 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, numbe
       if (schema.nullable !== true)
         str += `&&${id}!==null`;
 
-      // Required props
-      let props = (schema as TObject).props;
-      if (typeof props !== 'undefined')
-        for (const itemKey in props) str += `&&(${loadSchema(props[itemKey], `${id}.${itemKey}`, refs)})`;
+      str += loadObjectProps(schema as TObject, id, refs);
+      break;
+    } else if (key === 'tag' || key === 'maps') {
+      str += `typeof ${id}==='object'&&`;
+      if (schema.nullable !== true)
+        str += `${id}!==null&&`;
 
-      // Optional props
-      props = (schema as TObject).optionalProps;
-      if (typeof props !== 'undefined')
-        for (const itemKey in props) str += `&&(typeof ${id}.${itemKey}==='undefined'||${loadSchema(props[itemKey], `${id}.${itemKey}`, refs)})`;
+      const tagId = `${id}.${(schema as TTaggedUnion).tag}`;
+      str += `typeof ${tagId}==='string'&&`;
 
+      const maps = (schema as TTaggedUnion).maps;
+      for (const val in maps) str += `${tagId}===${JSON.stringify(val)}?true${loadObjectProps(maps[val], id, refs)}:`;
+
+      str += 'false';
       break;
     } else if (key === 'const') {
       // Inline constants
@@ -107,7 +126,7 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, numbe
 
   // eslint-disable-next-line
   return schema.nullable === true ? str + ')' : str;
-};
+}
 
 export default (schema: TSchema, id: string, decls: string[]): string => {
   if (typeof schema.defs === 'undefined')

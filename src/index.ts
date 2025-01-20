@@ -48,14 +48,19 @@ export interface TIntersection {
   allOf: TTypeList;
 }
 
+export interface TTaggedUnion {
+  tag: string;
+  maps: Record<string, TObject>;
+}
+
 export type TType = (
-  TBasic | TRef | TString | TObject | TTuple | TList | TUnion | TIntersection
+  TBasic | TRef | TString | TObject | TTuple | TList | TUnion | TIntersection | TTaggedUnion
 ) & {
   nullable?: boolean
 };
 
 // Force list to be more than 1 item
-export type TTypeList = [TType, TType, ...TType[]];
+export type TTypeList = [TType, ...TType[]];
 
 export type TSchema = TType & {
   defs?: Record<string, TType>,
@@ -69,20 +74,27 @@ export type InferType<T extends TType> =
   T extends TBasic ? TBasicMap[T['type']] :
     T extends TConst ? T['const'] :
       T extends TString ? string :
-        T extends TObject ? {
-          [K in keyof T['props']]: InferType<(T['props'] & {})[K]>
-        } & {
-          [K in keyof T['optionalProps']]?: InferType<(T['optionalProps'] & {})[K]>
-        } :
+        T extends TObject ? InferObject<T> :
           T extends TTuple ? InferList<T['values']> :
             T extends TList ? InferType<T['items']>[] :
               T extends TUnion ? InferUnion<T['anyOf']> :
                 T extends TIntersection ? InferIntersection<T['allOf']> :
-                  T extends TRef ? Ref<T['ref']> : unknown;
+                  T extends TTaggedUnion ? InferMaps<T['maps'], T['tag']> :
+                    T extends TRef ? Ref<T['ref']> : unknown;
+
+export type InferObject<T extends TObject> = {
+  [K in keyof T['props']]: InferType<(T['props'] & {})[K]>
+} & {
+  [K in keyof T['optionalProps']]?: InferType<(T['optionalProps'] & {})[K]>
+};
+
+export type InferMaps<T extends TTaggedUnion['maps'], Tag extends string> = {
+  [K in keyof T]: Record<Tag, K> & InferObject<T[K]>
+}[keyof T];
 
 export type InferList<T extends TType[]> =
   T extends [infer F extends TType, ...infer R extends TType[]]
-    // @ts-expect-error Huh
+    // @ts-expect-error It's not infinite
     ? [InferType<F>, ...InferList<R>] : [];
 
 export type InferUnion<T extends TType[]> =

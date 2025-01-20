@@ -1,5 +1,5 @@
 # Stnl
-A validator format.
+A JSON validator format.
 ```ts
 import schema, { type InferSchema } from 'stnl';
 

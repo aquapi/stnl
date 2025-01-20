@@ -1,4 +1,4 @@
-import type { TType, TBasic, TString, TList, TObject, TTuple, TRef, TConst, TSchema } from '../index.js';
+import type { TType, TBasic, TString, TList, TObject, TTuple, TRef, TConst, TSchema, TTaggedUnion } from '../index.js';
 
 export const loadSchema = (schema: TType, id: string, refs: Record<string, number>, isAlreadyString: boolean): string => {
   let str = schema.nullable === true ? `${id}===null?'null':` : '';
@@ -48,6 +48,38 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, numbe
 
       // Remove the leading ','
       return `${str})${hasRequiredKeys ? '' : '.slice(1)'}+"}"`;
+    } else if (key === 'tag' || key === 'maps') {
+      str += '"{"+(';
+
+      const tag = (schema as TTaggedUnion).tag;
+      // "name":
+      const encodedTag = `\\"${JSON.stringify(tag).slice(1, -1)}\\":`;
+
+      // The tag property
+      const tagId = `${id}.${(schema as TTaggedUnion).tag}`;
+      const maps = (schema as TTaggedUnion).maps;
+
+      let tmpSchema: TObject;
+      let props: Record<string, TType> | undefined;
+      let stringifiedVal: string;
+
+      for (const val in maps) {
+        stringifiedVal = JSON.stringify(val);
+        str += `${tagId}===${stringifiedVal}?("${encodedTag}\\"${stringifiedVal}\\""`;
+        tmpSchema = maps[val];
+
+        props = tmpSchema.props;
+        if (props != null)
+          for (const itemKey in props) str += `+',"${itemKey}":'+(${loadSchema(props[itemKey], `${id}.${itemKey}`, refs, true)})`;
+
+        props = (schema as TObject).optionalProps;
+        if (props != null)
+          for (const itemKey in props) str += `+(typeof ${id}.${itemKey}==="undefined"?"":',"${itemKey}":'+(${loadSchema(props[itemKey], `${id}.${itemKey}`, refs, true)}))`;
+
+        str += ')';
+      }
+
+      return `${str}"")+"}"`;
     } else if (key === 'const') {
       // Inline constants
       return str + (typeof (schema as TConst).const === 'string'
