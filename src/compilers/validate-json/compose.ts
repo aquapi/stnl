@@ -129,7 +129,6 @@ export default <T extends TSchema>(schema: T): (o: any) => o is InferSchema<T> =
   const refs: Record<string, Fn> = {};
 
   const defs = schema.defs;
-
   for (const key in defs) refs[key] = null as any as Fn;
   for (const key in defs) refs[key] = loadSchema(defs[key], refs);
 
