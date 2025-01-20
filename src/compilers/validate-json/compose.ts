@@ -8,13 +8,17 @@ export const loadSchema = (schema: TType, refs: Refs): Fn => {
   return schema.nullable === true ? (o) => o === null || fn(o) : fn;
 };
 
+const isBool: Fn = (o) => typeof o === 'boolean';
+const isFloat: Fn = (o) => typeof o === 'number';
+const isAny: Fn = (o) => typeof o !== 'undefined';
+
 export function loadSchemaWithoutNullable(schema: TType, refs: Refs): Fn {
   for (const key in schema) {
     if (key === 'type') {
       // Handle primitives
       switch ((schema as TBasic | TString).type) {
         case 'bool':
-          return (o) => typeof o === 'boolean';
+          return isBool;
 
         case 'string': {
           const max = ((schema as TString).maxLength ?? Infinity) + 1;
@@ -26,10 +30,10 @@ export function loadSchemaWithoutNullable(schema: TType, refs: Refs): Fn {
           return Number.isInteger;
 
         case 'float':
-          return Number.isFinite;
+          return isFloat;
 
         case 'any':
-          return (o) => typeof o !== 'undefined';
+          return isAny;
       }
     } else if (key === 'items') {
       const items = loadSchema((schema as TList).items, refs);

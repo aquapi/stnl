@@ -53,7 +53,7 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, numbe
 
       const tag = (schema as TTaggedUnion).tag;
       // "name":
-      const encodedTag = `\\"${JSON.stringify(tag).slice(1, -1)}\\":`;
+      const encodedTag = `"\\"${JSON.stringify(tag).slice(1, -1)}\\":`;
 
       // The tag property
       const tagId = `${id}.${(schema as TTaggedUnion).tag}`;
@@ -65,7 +65,7 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, numbe
 
       for (const val in maps) {
         stringifiedVal = JSON.stringify(val);
-        str += `${tagId}===${stringifiedVal}?("${encodedTag}\\"${stringifiedVal}\\""`;
+        str += `${tagId}===${stringifiedVal}?(${encodedTag}\\"${stringifiedVal.slice(1, -1)}\\""`;
         tmpSchema = maps[val];
 
         props = tmpSchema.props;
@@ -76,7 +76,7 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, numbe
         if (props != null)
           for (const itemKey in props) str += `+(typeof ${id}.${itemKey}==="undefined"?"":',"${itemKey}":'+(${loadSchema(props[itemKey], `${id}.${itemKey}`, refs, true)}))`;
 
-        str += ')';
+        str += '):';
       }
 
       return `${str}"")+"}"`;

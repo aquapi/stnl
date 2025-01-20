@@ -4,6 +4,7 @@ import stringifyJson from "../lib/compilers/stringify-json";
 function build(schema) {
   const decls = [];
   const content = stringifyJson(schema, "o", decls);
+  console.log(content);
 
   // eslint-disable-next-line
   return Function(
@@ -14,7 +15,6 @@ function build(schema) {
 function createTest(label, schema, tests) {
   test(label, () => {
     const fn = build(schema);
-    console.log(fn.toString());
     for (const i of tests) expect(fn(i)).toBe(JSON.stringify(i));
   });
 }
@@ -29,4 +29,28 @@ createTest(
     },
   },
   [{ name: "admin", age: 20 }],
+);
+createTest(
+  "Tagged unions",
+  {
+    tag: "role",
+    maps: {
+      user: {
+        props: {
+          id: { type: "int" },
+        },
+      },
+
+      moderator: {
+        props: {
+          id: { type: "int" },
+          points: { type: "int" },
+        },
+      },
+    },
+  },
+  [
+    { role: "user", id: 1 },
+    { role: "moderator", id: 2, points: 5 },
+  ],
 );
