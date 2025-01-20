@@ -1,5 +1,5 @@
-import type { TType, TBasic, TString, TList, TObject, TTuple, TIntersection, TUnion, TRef, TConst, TSchema } from '../index.js';
-import { compiler } from '../policy.js';
+import type { TType, TBasic, TString, TList, TObject, TTuple, TIntersection, TUnion, TRef, TConst, TSchema } from '../../index.js';
+import { compiler } from '../../policy.js';
 
 export const loadSchema = (schema: TType, id: string, refs: Record<string, number>): string => {
   let str = schema.nullable === true ? `(${id}===null||` : '';
@@ -115,17 +115,15 @@ export default (schema: TSchema, id: string, decls: string[]): string => {
 
   const refs: Record<string, number> = {};
 
-  if (typeof schema.defs !== 'undefined') {
-    const defs = schema.defs;
-    const schemas: [TType, number][] = [];
+  const defs = schema.defs;
+  const schemas: [TType, number][] = [];
 
-    // Initialize references first
-    for (const key in defs) schemas.push([defs[key], refs[key] = decls.push('')]);
+  // Initialize references first
+  for (const key in defs) schemas.push([defs[key], refs[key] = decls.push('')]);
 
-    // Then build the schemas
-    // eslint-disable-next-line
-    for (let i = 0, l = schemas.length; i < l; i++) decls[schemas[i][1]] = '(o)=>' + loadSchema(schemas[i][0], 'o', refs);
-  }
+  // Then build the schemas
+  // eslint-disable-next-line
+  for (let i = 0, l = schemas.length; i < l; i++) decls[schemas[i][1]] = '(o)=>' + loadSchema(schemas[i][0], 'o', refs);
 
   return loadSchema(schema, id, refs);
 };

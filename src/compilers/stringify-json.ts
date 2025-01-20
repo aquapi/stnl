@@ -86,17 +86,15 @@ export default (schema: TSchema, id: string, decls: string[]): string => {
 
   const refs: Record<string, number> = {};
 
-  if (typeof schema.defs !== 'undefined') {
-    const defs = schema.defs;
-    const schemas: [TType, number][] = [];
+  const defs = schema.defs;
+  const schemas: [TType, number][] = [];
 
-    // Initialize references first
-    for (const key in defs) schemas.push([defs[key], refs[key] = decls.push('')]);
+  // Initialize references first
+  for (const key in defs) schemas.push([defs[key], refs[key] = decls.push('')]);
 
-    // Then build the schemas
-    // eslint-disable-next-line
-    for (let i = 0, l = schemas.length; i < l; i++) decls[schemas[i][1]] = '(o)=>' + loadSchema(schemas[i][0], 'o', refs, false);
-  }
+  // Then build the schemas
+  // eslint-disable-next-line
+  for (let i = 0, l = schemas.length; i < l; i++) decls[schemas[i][1]] = '(o)=>' + loadSchema(schemas[i][0], 'o', refs, false);
 
   return loadSchema(schema, id, refs, false);
 };
