@@ -17,12 +17,14 @@
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "latest",
-    "@types/bun": "latest",
+    "@types/bun": "^1.1.18",
+    "@types/uglify-js": "^3.17.5",
     "eslint": "latest",
     "eslint-plugin-jsdoc": "latest",
     "mitata": "^1.0.31",
     "typescript": "latest",
-    "typescript-eslint": "latest"
+    "typescript-eslint": "latest",
+    "uglify-js": "^3.19.3"
   },
   "homepage": "https://github.com/re-utils/stnl"
 }
