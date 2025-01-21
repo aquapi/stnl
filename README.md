@@ -70,5 +70,5 @@ function build<T extends TSchema>(schema: T): (o: InferSchema<T>) => string {
 }
 
 const stringifyUser = build(User);
-stringifyUser({ name: 'reve', age: 16, pwd: 'revenode' }) === ;
+stringifyUser({ name: 'reve', age: 16, pwd: 'revenode' });
 ```
