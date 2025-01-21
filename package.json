@@ -9,7 +9,8 @@
   "types": "./index.d.ts",
   "scripts": {
     "build:test": "bun scripts/build.ts && bun test",
-    "build:bench": "bun build:test && bun scripts/bench.ts",
+    "bench": "bun scripts/bench.ts",
+    "build:bench": "bun build:test && bun bench",
     "build:publish": "bun build:test && bun scripts/publish.ts",
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix"

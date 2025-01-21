@@ -43,31 +43,36 @@ export function loadSchemaWithoutNullable(schema: TType, refs: Refs): Fn {
       return (o) => Array.isArray(o) && o.length > min && o.length < max && o.every(items);
     } else if (key === 'props' || key === 'optionalProps') {
       // Required props
-      const propsList: [string, Fn][] = (schema as TObject).props == null
-        ? []
-        : Object.entries((schema as TObject).props!).map((kv) => [kv[0], loadSchema(kv[1], refs)]);
+      const [propsKey, propsVal] = (schema as TObject).props == null
+        ? [[] as string[], [] as Fn[]] as const
+        : [
+          Object.keys((schema as TObject).props!),
+          Object.values((schema as TObject).props!).map((v) => loadSchema(v, refs))
+        ] as const;
 
-      // Optional props
-      const optionalPropsList: [string, Fn][] = (schema as TObject).optionalProps == null
-        ? []
-        : Object.entries((schema as TObject).optionalProps!).map((kv) => [kv[0], loadSchema(kv[1], refs)]);
+      const [optionalPropsKey, optionalPropsVal] = (schema as TObject).optionalProps == null
+        ? [[] as string[], [] as Fn[]] as const
+        : [
+          Object.keys((schema as TObject).optionalProps!),
+          Object.values((schema as TObject).optionalProps!).map((v) => loadSchema(v, refs))
+        ] as const;
 
       return (o) => {
         if (typeof o !== 'object' || o === null) return false;
 
         let tmp: any;
 
-        for (let i = 0; i < propsList.length; i++) {
+        for (let i = 0; i < propsKey.length; i++) {
           // eslint-disable-next-line
-          tmp = o[propsList[i][0]];
-          if (typeof tmp === 'undefined' || !propsList[i][1](tmp))
+          tmp = o[propsKey[i]];
+          if (typeof tmp === 'undefined' || !propsVal[i](tmp))
             return false;
         }
 
-        for (let i = 0; i < optionalPropsList.length; i++) {
+        for (let i = 0; i < optionalPropsKey.length; i++) {
           // eslint-disable-next-line
-          tmp = o[optionalPropsList[i][0]];
-          if (typeof tmp !== 'undefined' && !optionalPropsList[i][1](tmp))
+          tmp = o[optionalPropsKey[i]];
+          if (typeof tmp !== 'undefined' && !optionalPropsVal[i](tmp))
             return false;
         }
 

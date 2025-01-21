@@ -5,10 +5,7 @@ import jsdoc from "eslint-plugin-jsdoc";
 
 export default tsEslint.config(
   {
-    ignores: ["**/*.js", "**/*.d.ts", "lib/**/*", "node_modules/**/*"],
-  },
-  {
-    files: ["**/*.ts"],
+    files: ["src/**/*.ts"],
     plugins: {
       "@typescript-eslint": tsEslint.plugin,
       "@stylistic": stylistic,
