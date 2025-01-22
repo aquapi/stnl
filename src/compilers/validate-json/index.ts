@@ -1,4 +1,5 @@
-import type { TType, TBasic, TString, TList, TObject, TTuple, TIntersection, TUnion, TRef, TConst, TSchema, TTaggedUnion } from '../../index.js';
+import type { TType, TBasic, TString, TList, TObject, TTuple, TIntersection, TUnion, TRef, TConst, TSchema, TTaggedUnion, InferSchema } from '../../index.js';
+import buildSchema from '../build.js';
 
 export const loadObjectProps = (schema: TObject, id: string, refs: Record<string, number>): string => {
   let str = '';
@@ -128,7 +129,7 @@ export function loadSchema(schema: TType, id: string, refs: Record<string, numbe
   return schema.nullable === true ? str + ')' : str;
 }
 
-export default (schema: TSchema, id: string, decls: string[]): string => {
+const f = (schema: TSchema, id: string, decls: string[]): string => {
   if (typeof schema.defs === 'undefined')
     return loadSchema(schema, id, null as unknown as Record<string, number>);
 
@@ -146,3 +147,6 @@ export default (schema: TSchema, id: string, decls: string[]): string => {
 
   return loadSchema(schema, id, refs);
 };
+
+export default f;
+export const build = <const T extends TSchema>(schema: T): (o: any) => o is InferSchema<T> => buildSchema(schema, f) as any;
