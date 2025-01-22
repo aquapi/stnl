@@ -1,9 +1,10 @@
 # Stnl
 A JSON validator format.
 ```ts
-import schema, { type InferSchema } from 'stnl';
+import stnl, { type InferSchema } from 'stnl';
 
-export const User = schema({
+// Just a wrapper for type hint
+export const User = stnl({
   props: {
     name: {
       type: 'string',
