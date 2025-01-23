@@ -2,6 +2,7 @@ export interface TBasicMap {
   int: number;
   float: number;
   bool: boolean;
+  string: string;
   any: unknown;
 }
 
@@ -53,11 +54,11 @@ export interface TTaggedUnion {
   maps: Record<string, TObject>;
 }
 
-export type TType = (
-  TBasic | TRef | TString | TObject | TTuple | TList | TUnion | TIntersection | TTaggedUnion
+export type TType = ((
+  TBasic | TRef | TString | TConst | TObject | TTuple | TList | TUnion | TIntersection | TTaggedUnion
 ) & {
   nullable?: boolean
-};
+}) | keyof TBasicMap;
 
 // Force list to be more than 1 item
 export type TTypeList = [TType, ...TType[]];
@@ -73,14 +74,13 @@ interface Ref<T extends string> { [REFSYM]: T }
 export type InferType<T extends TType> =
   T extends TBasic ? TBasicMap[T['type']] :
     T extends TConst ? T['const'] :
-      T extends TString ? string :
-        T extends TObject ? InferObject<T> :
-          T extends TTuple ? InferList<T['values']> :
-            T extends TList ? InferType<T['items']>[] :
-              T extends TUnion ? InferUnion<T['anyOf']> :
-                T extends TIntersection ? InferIntersection<T['allOf']> :
-                  T extends TTaggedUnion ? InferMaps<T['maps'], T['tag']> :
-                    T extends TRef ? Ref<T['ref']> : unknown;
+      T extends TObject ? InferObject<T> :
+        T extends TTuple ? InferList<T['values']> :
+          T extends TList ? InferType<T['items']>[] :
+            T extends TUnion ? InferUnion<T['anyOf']> :
+              T extends TIntersection ? InferIntersection<T['allOf']> :
+                T extends TTaggedUnion ? InferMaps<T['maps'], T['tag']> :
+                  T extends TRef ? Ref<T['ref']> : unknown;
 
 export type InferObject<T extends TObject> = {
   [K in keyof T['props']]: InferType<(T['props'] & {})[K]>

@@ -3,16 +3,29 @@ import type { TType, TBasic, TString, TList, TObject, TTuple, TIntersection, TUn
 type Fn = (o: any) => boolean;
 type Refs = Record<string, Fn>;
 
+const isBool: Fn = (o) => typeof o === 'boolean';
+const isFloat: Fn = (o) => typeof o === 'number';
+const isAny: Fn = (o) => typeof o !== 'undefined';
+const isString: Fn = (o) => typeof o === 'string';
+
 export const loadSchema = (schema: TType, refs: Refs): Fn => {
+  if (typeof schema === 'string') {
+    return schema === 'any'
+      ? isAny
+      : schema === 'bool'
+        ? isBool
+        : schema === 'int'
+          ? Number.isSafeInteger
+          : schema === 'float'
+            ? isFloat
+            : isString;
+  }
+
   const fn = loadSchemaWithoutNullable(schema, refs);
   return schema.nullable === true ? (o) => o === null || fn(o) : fn;
 };
 
-const isBool: Fn = (o) => typeof o === 'boolean';
-const isFloat: Fn = (o) => typeof o === 'number';
-const isAny: Fn = (o) => typeof o !== 'undefined';
-
-export function loadSchemaWithoutNullable(schema: TType, refs: Refs): Fn {
+export function loadSchemaWithoutNullable(schema: Exclude<TType, string>, refs: Refs): Fn {
   for (const key in schema) {
     if (key === 'type') {
       // Handle primitives
@@ -27,7 +40,7 @@ export function loadSchemaWithoutNullable(schema: TType, refs: Refs): Fn {
         }
 
         case 'int':
-          return Number.isInteger;
+          return Number.isSafeInteger;
 
         case 'float':
           return isFloat;

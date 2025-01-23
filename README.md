@@ -10,9 +10,7 @@ export const User = stnl({
       type: 'string',
       minLength: 3
     },
-    age: {
-      type: 'int'
-    },
+    age: 'int',
     pwd: {
       type: 'string',
       minLength: 8,

@@ -8,10 +8,9 @@
   "main": "./index.js",
   "types": "./index.d.ts",
   "scripts": {
-    "build:test": "bun scripts/build.ts && bun test",
-    "bench": "bun scripts/bench.ts",
-    "build:bench": "bun build:test && bun bench",
-    "build:publish": "bun build:test && bun scripts/publish.ts",
+    "task": "bun scripts/task.ts",
+    "build:test": "bun task build && bun test",
+    "build:publish": "bun task build && bun task report-size && bun task publish",
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix"
   },

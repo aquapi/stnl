@@ -7,7 +7,7 @@ export const loadObjectProps = (schema: TObject, id: string, refs: Record<string
   // Required props
   let props = schema.props;
   if (typeof props !== 'undefined')
-    for (const itemKey in props) str += `&&(${loadSchema(props[itemKey], `${id}.${itemKey}`, refs)})`;
+    for (const itemKey in props) str += `&&(typeof ${id}.${itemKey}!=='undefined'||${loadSchema(props[itemKey], `${id}.${itemKey}`, refs)})`;
 
   // Optional props
   props = schema.optionalProps;
@@ -17,37 +17,42 @@ export const loadObjectProps = (schema: TObject, id: string, refs: Record<string
   return str;
 };
 
+// eslint-disable-next-line
+export const loadType = (type: TBasic['type'], id: string): string => type === 'int'
+  ? `Number.isSafeInteger(${id})`
+  : type === 'any'
+    ? 'true'
+    : `typeof ${id}==='${type === 'float'
+      ? 'number'
+      : type === 'bool'
+        ? 'boolean'
+        : 'string'
+    }'`;
+
 export function loadSchema(schema: TType, id: string, refs: Record<string, number>): string {
+  if (typeof schema === 'string')
+    return loadType(schema, id);
+
   let str = schema.nullable === true ? `(${id}===null||` : '';
 
   loop: for (const key in schema) {
     if (key === 'type') {
+      str += loadType((schema as TBasic).type, id);
+
       // Handle primitives
-      switch ((schema as TBasic | TString).type) {
+      switch ((schema as TBasic).type) {
         case 'bool':
-          str += `typeof ${id}==='boolean'`;
+        case 'int':
+        case 'float':
+        case 'any':
           break loop;
 
         case 'string':
-          str += `typeof ${id}==='string'`;
-
           if (typeof (schema as TString).maxLength === 'number')
             str += `&&${id}.length<${(schema as TString).maxLength! + 1}`;
           if (typeof (schema as TString).minLength === 'number')
             str += `&&${id}.length>${(schema as TString).minLength! - 1}`;
 
-          break loop;
-
-        case 'int':
-          str += `Number.isInteger(${id})`;
-          break loop;
-
-        case 'float':
-          str += `typeof ${id}==='number'`;
-          break loop;
-
-        case 'any':
-          str += `typeof ${id}!=='undefined'`;
           break loop;
       }
     } else if (key === 'items') {

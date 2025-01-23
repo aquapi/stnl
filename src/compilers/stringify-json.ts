@@ -1,24 +1,21 @@
-import type { TType, TBasic, TString, TList, TObject, TTuple, TRef, TConst, TSchema, TTaggedUnion, InferSchema } from '../index.js';
+import type { TType, TBasic, TList, TObject, TTuple, TRef, TConst, TSchema, TTaggedUnion, InferSchema } from '../index.js';
 import buildSchema from './build.js';
 
+// eslint-disable-next-line
+export const loadType = (type: TBasic['type'], id: string, isAlreadyString: boolean): string => type === 'float' || type === 'int'
+  ? isAlreadyString ? id : `''+${id}`
+  : `JSON.stringify(${id})`;
+
 export const loadSchema = (schema: TType, id: string, refs: Record<string, number>, isAlreadyString: boolean): string => {
+  if (typeof schema === 'string')
+    return loadType(schema, id, isAlreadyString);
+
   let str = schema.nullable === true ? `${id}===null?'null':` : '';
 
   for (const key in schema) {
-    if (key === 'type') {
-      // Handle primitives
-      switch ((schema as TBasic | TString).type) {
-        case 'int':
-        case 'float':
-        case 'bool':
-          // Don't do unnecessary castings
-          return str + (isAlreadyString ? id : `''+${id}`);
-
-        case 'any':
-        case 'string':
-          return `${str}JSON.stringify(${id})`;
-      }
-    } else if (key === 'items') {
+    if (key === 'type')
+      return loadType((schema as TBasic).type, id, isAlreadyString);
+    else if (key === 'items') {
       // Handle arrays
       return `${str}("[" + ${id}.map((o)=>${loadSchema((schema as TList).items, 'o', refs, true)}).join() + "]")`;
     } else if (key === 'props' || key === 'optionalProps') {
