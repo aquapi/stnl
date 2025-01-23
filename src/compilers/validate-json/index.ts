@@ -1,4 +1,4 @@
-import type { TType, TBasic, TString, TList, TObject, TTuple, TIntersection, TUnion, TRef, TConst, TSchema, TTaggedUnion, InferSchema } from '../../index.js';
+import type { TType, TBasic, TString, TList, TObject, TTuple, TIntersection, TUnion, TRef, TConst, TSchema, TTaggedUnion, InferSchema, TNumber } from '../../index.js';
 import buildSchema from '../build.js';
 
 export const loadObjectProps = (schema: TObject, id: string, refs: Record<string, number>): string => {
@@ -42,16 +42,23 @@ export function loadSchema(schema: TType, id: string, refs: Record<string, numbe
       // Handle primitives
       switch ((schema as TBasic).type) {
         case 'bool':
-        case 'int':
-        case 'float':
         case 'any':
           break loop;
 
+        case 'int':
+        case 'float':
+          if (typeof (schema as TNumber).max === 'number')
+            str += `&&${id}<=${(schema as TNumber).max!}`;
+          if (typeof (schema as TNumber).min === 'number')
+            str += `&&${id}>=${(schema as TNumber).min!}`;
+
+          break loop;
+
         case 'string':
-          if (typeof (schema as TString).maxLength === 'number')
-            str += `&&${id}.length<${(schema as TString).maxLength! + 1}`;
-          if (typeof (schema as TString).minLength === 'number')
-            str += `&&${id}.length>${(schema as TString).minLength! - 1}`;
+          if (typeof (schema as TString).maxLen === 'number')
+            str += `&&${id}.length<${(schema as TString).maxLen! + 1}`;
+          if (typeof (schema as TString).minLen === 'number')
+            str += `&&${id}.length>${(schema as TString).minLen! - 1}`;
 
           break loop;
       }

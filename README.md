@@ -3,7 +3,7 @@ A JSON validator format.
 ```ts
 import stnl, { type InferSchema } from 'stnl';
 
-// Just a wrapper for type hint
+// A wrapper for type autocomplete
 export const User = stnl({
   props: {
     name: {

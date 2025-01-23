@@ -1,4 +1,4 @@
-import type { TType, TBasic, TString, TList, TObject, TTuple, TIntersection, TUnion, TConst, TSchema, InferSchema, TTaggedUnion } from '../../index.js';
+import type { TType, TBasic, TString, TList, TObject, TTuple, TIntersection, TUnion, TConst, TSchema, InferSchema, TTaggedUnion, TNumber } from '../../index.js';
 
 type Fn = (o: any) => boolean;
 type Refs = Record<string, Fn>;
@@ -25,6 +25,15 @@ export const loadSchema = (schema: TType, refs: Refs): Fn => {
   return schema.nullable === true ? (o) => o === null || fn(o) : fn;
 };
 
+const loadNumberSchema = (isFloatSchema: boolean, schema: TNumber): Fn => {
+  const max = schema.max ?? Infinity;
+  const min = schema.min ?? -Infinity;
+
+  return isFloatSchema
+    ? (o) => typeof o === 'number' && o <= max && o >= min
+    : (o) => Number.isSafeInteger(o) && o <= max && o >= min;
+};
+
 export function loadSchemaWithoutNullable(schema: Exclude<TType, string>, refs: Refs): Fn {
   for (const key in schema) {
     if (key === 'type') {
@@ -34,16 +43,16 @@ export function loadSchemaWithoutNullable(schema: Exclude<TType, string>, refs: 
           return isBool;
 
         case 'string': {
-          const max = ((schema as TString).maxLength ?? Infinity) + 1;
-          const min = ((schema as TString).minLength ?? 0) - 1;
+          const max = ((schema as TString).maxLen ?? Infinity) + 1;
+          const min = ((schema as TString).minLen ?? 0) - 1;
           return (o) => typeof o === 'string' && o.length < max && o.length > min;
         }
 
         case 'int':
-          return Number.isSafeInteger;
+          return loadNumberSchema(false, schema as TNumber);
 
         case 'float':
-          return isFloat;
+          return loadNumberSchema(false, schema as TNumber);
 
         case 'any':
           return isAny;

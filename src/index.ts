@@ -21,8 +21,15 @@ export interface TConst {
 export interface TString {
   type: 'string';
 
-  minLength?: number;
-  maxLength?: number;
+  minLen?: number;
+  maxLen?: number;
+}
+
+export interface TNumber {
+  type: 'float' | 'int';
+
+  min?: number;
+  max?: number;
 }
 
 export interface TObject {
@@ -55,7 +62,7 @@ export interface TTaggedUnion {
 }
 
 export type TType = ((
-  TBasic | TRef | TString | TConst | TObject | TTuple | TList | TUnion | TIntersection | TTaggedUnion
+  TBasic | TRef | TString | TNumber | TConst | TObject | TTuple | TList | TUnion | TIntersection | TTaggedUnion
 ) & {
   nullable?: boolean
 }) | keyof TBasicMap;
