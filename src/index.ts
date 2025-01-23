@@ -44,8 +44,8 @@ export interface TTuple {
 export interface TList {
   items: TType;
 
-  minLength?: number;
-  maxLength?: number;
+  minLen?: number;
+  maxLen?: number;
 }
 
 export interface TUnion {

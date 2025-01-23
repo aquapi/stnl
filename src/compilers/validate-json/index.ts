@@ -65,10 +65,10 @@ export function loadSchema(schema: TType, id: string, refs: Record<string, numbe
     } else if (key === 'items') {
       str += `Array.isArray(${id})`;
 
-      if (typeof (schema as TList).maxLength === 'number')
-        str += `&&${id}.length<${(schema as TList).maxLength! + 1}`;
-      if (typeof (schema as TList).minLength === 'number')
-        str += `&&${id}.length>${(schema as TList).minLength! - 1}`;
+      if (typeof (schema as TList).maxLen === 'number')
+        str += `&&${id}.length<${(schema as TList).maxLen! + 1}`;
+      if (typeof (schema as TList).minLen === 'number')
+        str += `&&${id}.length>${(schema as TList).minLen! - 1}`;
 
       str += `&&${id}.every((o)=>${loadSchema((schema as TList).items, 'o', refs)})`;
       break;

@@ -59,8 +59,8 @@ export function loadSchemaWithoutNullable(schema: Exclude<TType, string>, refs: 
       }
     } else if (key === 'items') {
       const items = loadSchema((schema as TList).items, refs);
-      const max = ((schema as TList).maxLength ?? Infinity) + 1;
-      const min = ((schema as TList).minLength ?? 0) - 1;
+      const max = ((schema as TList).maxLen ?? Infinity) + 1;
+      const min = ((schema as TList).minLen ?? 0) - 1;
 
       return (o) => Array.isArray(o) && o.length > min && o.length < max && o.every(items);
     } else if (key === 'props' || key === 'optionalProps') {
