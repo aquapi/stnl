@@ -1,13 +1,9 @@
-export interface TBasicMap {
-  int: number;
-  float: number;
+export type NumberType = `${'i' | 'u'}${8 | 16 | 32 | 64}` | `f${32 | 64}`;
+
+export interface TBasicMap extends Record<NumberType, number> {
   bool: boolean;
   string: string;
   any: unknown;
-}
-
-export interface TBasic {
-  type: keyof TBasicMap;
 }
 
 export interface TRef {
@@ -23,13 +19,6 @@ export interface TString {
 
   minLen?: number;
   maxLen?: number;
-}
-
-export interface TNumber {
-  type: 'float' | 'int';
-
-  min?: number;
-  max?: number;
 }
 
 export interface TObject {
@@ -62,7 +51,7 @@ export interface TTaggedUnion {
 }
 
 export type TType = ((
-  TBasic | TRef | TString | TNumber | TConst | TObject | TTuple | TList | TUnion | TIntersection | TTaggedUnion
+  TRef | TString | TConst | TObject | TTuple | TList | TUnion | TIntersection | TTaggedUnion
 ) & {
   nullable?: boolean
 }) | keyof TBasicMap;
@@ -79,7 +68,7 @@ declare const REFSYM: unique symbol;
 interface Ref<T extends string> { [REFSYM]: T }
 
 export type InferType<T extends TType> =
-  T extends TBasic ? TBasicMap[T['type']] :
+  T extends keyof TBasicMap ? TBasicMap[T] :
     T extends TConst ? T['const'] :
       T extends TObject ? InferObject<T> :
         T extends TTuple ? InferList<T['values']> :

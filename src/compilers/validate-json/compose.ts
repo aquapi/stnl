@@ -1,62 +1,73 @@
-import type { TType, TBasic, TString, TList, TObject, TTuple, TIntersection, TUnion, TConst, TSchema, InferSchema, TTaggedUnion, TNumber } from '../../index.js';
+import type { TType, TString, TList, TObject, TTuple, TIntersection, TUnion, TConst, TSchema, InferSchema, TTaggedUnion, TBasicMap } from '../../index.js';
 
 type Fn = (o: any) => boolean;
 type Refs = Record<string, Fn>;
 
 const isBool: Fn = (o) => typeof o === 'boolean';
 const isFloat: Fn = (o) => typeof o === 'number';
-const isAny: Fn = (o) => typeof o !== 'undefined';
+const isAny: Fn = () => true;
 const isString: Fn = (o) => typeof o === 'string';
+
+const isInt = new Map<string, Fn>();
 
 export const loadSchema = (schema: TType, refs: Refs): Fn => {
   if (typeof schema === 'string') {
-    return schema === 'any'
-      ? isAny
-      : schema === 'bool'
-        ? isBool
-        : schema === 'int'
-          ? Number.isSafeInteger
-          : schema === 'float'
-            ? isFloat
-            : isString;
+    switch (schema.charCodeAt(0)) {
+      // Any
+      case 97:
+        return isAny;
+
+      // Bool
+      case 98:
+        return isBool;
+
+      // Float
+      case 102:
+        return isFloat;
+
+      // Signed integers
+      case 105: {
+        let cached = isInt.get(schema);
+        if (cached != null) return cached;
+
+        const upperBound = 2 ** (+schema.slice(1) - 1);
+        const lowerBound = -upperBound - 1;
+
+        cached = (o) => Number.isInteger(o) && o > lowerBound && o < upperBound;
+        isInt.set(schema, cached);
+        return cached;
+      }
+
+      // String
+      case 115:
+        return isString;
+
+      // Unsigned integers
+      case 117: {
+        let cached = isInt.get(schema);
+        if (cached != null) return cached;
+
+        const upperBound = 2 ** +schema.slice(1);
+
+        cached = (o) => Number.isInteger(o) && o > -1 && o < upperBound;
+        isInt.set(schema, cached);
+        return cached;
+      }
+    }
   }
 
-  const fn = loadSchemaWithoutNullable(schema, refs);
-  return schema.nullable === true ? (o) => o === null || fn(o) : fn;
-};
-
-const loadNumberSchema = (isFloatSchema: boolean, schema: TNumber): Fn => {
-  const max = schema.max ?? Infinity;
-  const min = schema.min ?? -Infinity;
-
-  return isFloatSchema
-    ? (o) => typeof o === 'number' && o <= max && o >= min
-    : (o) => Number.isSafeInteger(o) && o <= max && o >= min;
+  const fn = loadSchemaWithoutNullable(schema as Exclude<TSchema, keyof TBasicMap>, refs);
+  return (schema as Exclude<TSchema, keyof TBasicMap>).nullable === true ? (o) => o === null || fn(o) : fn;
 };
 
 export function loadSchemaWithoutNullable(schema: Exclude<TType, string>, refs: Refs): Fn {
   for (const key in schema) {
     if (key === 'type') {
-      // Handle primitives
-      switch ((schema as TBasic | TString).type) {
-        case 'bool':
-          return isBool;
+      // String
+      const maxLen = ((schema as TString).maxLen ?? Infinity) + 1;
+      const minLen = ((schema as TString).minLen ?? 0) - 1;
 
-        case 'string': {
-          const max = ((schema as TString).maxLen ?? Infinity) + 1;
-          const min = ((schema as TString).minLen ?? 0) - 1;
-          return (o) => typeof o === 'string' && o.length < max && o.length > min;
-        }
-
-        case 'int':
-          return loadNumberSchema(false, schema as TNumber);
-
-        case 'float':
-          return loadNumberSchema(false, schema as TNumber);
-
-        case 'any':
-          return isAny;
-      }
+      return (o) => typeof o === 'string' && o.length > minLen && o.length < maxLen;
     } else if (key === 'items') {
       const items = loadSchema((schema as TList).items, refs);
       const max = ((schema as TList).maxLen ?? Infinity) + 1;

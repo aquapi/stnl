@@ -1,8 +1,8 @@
-import type { TType, TBasic, TList, TObject, TTuple, TRef, TConst, TSchema, TTaggedUnion, InferSchema } from '../index.js';
+import type { TType, TList, TObject, TTuple, TRef, TConst, TSchema, TTaggedUnion, InferSchema, TBasicMap } from '../index.js';
 import buildSchema from './build.js';
 
 // eslint-disable-next-line
-export const loadType = (type: TBasic['type'], id: string, isAlreadyString: boolean): string => type === 'float' || type === 'int'
+export const loadType = (type: keyof TBasicMap, id: string, isAlreadyString: boolean): string => /^[iuf].*/.test(type)
   ? isAlreadyString ? id : `''+${id}`
   : `JSON.stringify(${id})`;
 
@@ -13,9 +13,7 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, numbe
   let str = schema.nullable === true ? `${id}===null?'null':` : '';
 
   for (const key in schema) {
-    if (key === 'type')
-      return loadType((schema as TBasic).type, id, isAlreadyString);
-    else if (key === 'items') {
+    if (key === 'items') {
       // Handle arrays
       return `${str}("[" + ${id}.map((o)=>${loadSchema((schema as TList).items, 'o', refs, true)}).join() + "]")`;
     } else if (key === 'props' || key === 'optionalProps') {
@@ -100,8 +98,8 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, numbe
 
       // eslint-disable-next-line
       return str + ')+"]"';
-    } else if (key === 'allOf' || key === 'anyOf') {
-      // Ain't no way I'm compiling this shit
+    } else if (key === 'allOf' || key === 'anyOf' || key === 'type') {
+      // Union, intersection and string
       return `${str}JSON.stringify(${id})`;
     }
   }

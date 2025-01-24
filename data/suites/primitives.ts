@@ -90,7 +90,7 @@ const floatTests: Test[] = [
 export default <Suite[]>[
   {
     name: 'Integer',
-    schema: 'int',
+    schema: 'i64',
     tests: [
       ...intTests,
       ...negates([
@@ -105,7 +105,7 @@ export default <Suite[]>[
 
   {
     name: 'Float',
-    schema: 'float',
+    schema: 'f64',
     tests: [
       ...intTests,
       ...floatTests,

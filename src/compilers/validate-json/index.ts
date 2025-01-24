@@ -1,4 +1,4 @@
-import type { TType, TBasic, TString, TList, TObject, TTuple, TIntersection, TUnion, TRef, TConst, TSchema, TTaggedUnion, InferSchema, TNumber } from '../../index.js';
+import type { TType, TString, TList, TObject, TTuple, TIntersection, TUnion, TRef, TConst, TSchema, TTaggedUnion, InferSchema, TBasicMap } from '../../index.js';
 import buildSchema from '../build.js';
 
 export const loadObjectProps = (schema: TObject, id: string, refs: Record<string, number>): string => {
@@ -17,17 +17,43 @@ export const loadObjectProps = (schema: TObject, id: string, refs: Record<string
   return str;
 };
 
-// eslint-disable-next-line
-export const loadType = (type: TBasic['type'], id: string): string => type === 'int'
-  ? `Number.isSafeInteger(${id})`
-  : type === 'any'
-    ? 'true'
-    : `typeof ${id}==='${type === 'float'
-      ? 'number'
-      : type === 'bool'
-        ? 'boolean'
-        : 'string'
-    }'`;
+export const loadLenChecks = (schema: TString | TList, id: string): string =>
+  // eslint-disable-next-line
+  (typeof schema.maxLen === 'number' ? `&&${id}.length<${(schema as TString).maxLen! + 1}` : '') + (typeof schema.minLen === 'number' ? `&&${id}.length>${(schema as TString).minLen! - 1}` : '');
+
+export const loadType = (type: keyof TBasicMap, id: string): string => {
+  switch (type.charCodeAt(0)) {
+    // Any
+    case 97:
+      return 'true';
+
+    // Bool
+    case 98:
+      return `typeof ${id}==='boolean'`;
+
+    // Float
+    case 102:
+      return `typeof ${id}==='number'`;
+
+    // Signed integers
+    case 105: {
+      const limit = 2 ** (+type.slice(1) - 1);
+      return `Number.isInteger(${id})&&${id}>${-limit - 1}&&${id}<${limit}`;
+    }
+
+    // String
+    case 115:
+      return `typeof ${id}==='string'`;
+
+    // Unsigned integers
+    case 117: {
+      const limit = 2 ** +type.slice(1);
+      return `Number.isInteger(${id})&&${id}>-1&&${id}<${limit}`;
+    }
+  }
+
+  return '';
+};
 
 export function loadSchema(schema: TType, id: string, refs: Record<string, number>): string {
   if (typeof schema === 'string')
@@ -37,40 +63,10 @@ export function loadSchema(schema: TType, id: string, refs: Record<string, numbe
 
   loop: for (const key in schema) {
     if (key === 'type') {
-      str += loadType((schema as TBasic).type, id);
-
-      // Handle primitives
-      switch ((schema as TBasic).type) {
-        case 'bool':
-        case 'any':
-          break loop;
-
-        case 'int':
-        case 'float':
-          if (typeof (schema as TNumber).max === 'number')
-            str += `&&${id}<=${(schema as TNumber).max!}`;
-          if (typeof (schema as TNumber).min === 'number')
-            str += `&&${id}>=${(schema as TNumber).min!}`;
-
-          break loop;
-
-        case 'string':
-          if (typeof (schema as TString).maxLen === 'number')
-            str += `&&${id}.length<${(schema as TString).maxLen! + 1}`;
-          if (typeof (schema as TString).minLen === 'number')
-            str += `&&${id}.length>${(schema as TString).minLen! - 1}`;
-
-          break loop;
-      }
+      str += `typeof ${id}==='string'${loadLenChecks(schema as TString, id)}`;
+      break loop;
     } else if (key === 'items') {
-      str += `Array.isArray(${id})`;
-
-      if (typeof (schema as TList).maxLen === 'number')
-        str += `&&${id}.length<${(schema as TList).maxLen! + 1}`;
-      if (typeof (schema as TList).minLen === 'number')
-        str += `&&${id}.length>${(schema as TList).minLen! - 1}`;
-
-      str += `&&${id}.every((o)=>${loadSchema((schema as TList).items, 'o', refs)})`;
+      str += `Array.isArray(${id})${loadLenChecks(schema as TList, id)}&&${id}.every((o)=>${loadSchema((schema as TList).items, 'o', refs)})`;
       break;
     } else if (key === 'props' || key === 'optionalProps') {
       str += `typeof ${id}==='object'`;

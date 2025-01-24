@@ -9,17 +9,17 @@ export default defineCase({
     assertLoose: (() => {
       const schema = stnl({
         props: {
-          number: { type: 'float' },
-          negNumber: { type: 'float' },
-          maxNumber: { type: 'float' },
-          string: { type: 'string' },
-          longString: { type: 'string' },
-          boolean: { type: 'bool' },
+          number: 'f64',
+          negNumber: 'f64',
+          maxNumber: 'f64',
+          string: 'string',
+          longString: 'string',
+          boolean: 'bool',
           deeplyNested: {
             props: {
-              foo: { type: 'string' },
-              num: { type: 'float' },
-              bool: { type: 'bool' }
+              foo: 'string',
+              num: 'f64',
+              bool: 'bool'
             }
           }
         }
