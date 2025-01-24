@@ -7,7 +7,7 @@ export const loadObjectProps = (schema: TObject, id: string, refs: Record<string
   // Required props
   let props = schema.props;
   if (typeof props !== 'undefined')
-    for (const itemKey in props) str += `&&(typeof ${id}.${itemKey}!=='undefined'||${loadSchema(props[itemKey], `${id}.${itemKey}`, refs)})`;
+    for (const itemKey in props) str += `&&${loadSchema(props[itemKey], `${id}.${itemKey}`, refs)}`;
 
   // Optional props
   props = schema.optionalProps;
@@ -25,7 +25,7 @@ export const loadType = (type: keyof TBasicMap, id: string): string => {
   switch (type.charCodeAt(0)) {
     // Any
     case 97:
-      return 'true';
+      return `typeof ${id}==='undefined'`;
 
     // Bool
     case 98:

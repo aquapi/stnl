@@ -5,7 +5,7 @@ type Refs = Record<string, Fn>;
 
 const isBool: Fn = (o) => typeof o === 'boolean';
 const isFloat: Fn = (o) => typeof o === 'number';
-const isAny: Fn = () => true;
+const isAny: Fn = (o) => typeof o !== 'undefined';
 const isString: Fn = (o) => typeof o === 'string';
 
 const isInt = new Map<string, Fn>();
@@ -100,7 +100,7 @@ export function loadSchemaWithoutNullable(schema: Exclude<TType, string>, refs: 
         for (let i = 0; i < propsKey.length; i++) {
           // eslint-disable-next-line
           tmp = o[propsKey[i]];
-          if (typeof tmp === 'undefined' || !propsVal[i](tmp))
+          if (!propsVal[i](tmp))
             return false;
         }
 
@@ -140,7 +140,7 @@ export function loadSchemaWithoutNullable(schema: Exclude<TType, string>, refs: 
         for (let i = 0, propsList = lists[0]; i < propsList.length; i++) {
           // eslint-disable-next-line
           tmp = o[propsList[i][0]];
-          if (typeof tmp === 'undefined' || !propsList[i][1](tmp))
+          if (!propsList[i][1](tmp))
             return false;
         }
 
