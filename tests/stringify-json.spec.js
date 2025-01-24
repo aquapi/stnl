@@ -2,15 +2,18 @@ import { describe, test, expect } from "bun:test";
 import suites from "../data/suites";
 
 import { build } from "../src/compilers/stringify-json";
+import compose from "../src/compilers/stringify-json/compose";
 
 for (const suite of suites) {
   describe(suite.name, () => {
     const fn = build(suite.schema);
+    const composedFn = compose(suite.schema);
 
     for (const i of suite.tests) {
       if (i.valid)
         test(i.name, () => {
           expect(fn(i.value)).toBe(JSON.stringify(i.value));
+          expect(composedFn(i.value)).toBe(JSON.stringify(i.value));
         });
     }
   });

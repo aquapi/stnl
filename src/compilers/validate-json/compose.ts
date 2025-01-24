@@ -1,4 +1,4 @@
-import type { TType, TString, TList, TObject, TTuple, TIntersection, TUnion, TConst, TSchema, InferSchema, TTaggedUnion, TBasicMap } from '../../index.js';
+import type { TType, TString, TList, TObject, TTuple, TIntersection, TUnion, TConst, TSchema, InferSchema, TTaggedUnion } from '../../index.js';
 
 type Fn = (o: any) => boolean;
 type Refs = Record<string, Fn>;
@@ -54,10 +54,12 @@ export const loadSchema = (schema: TType, refs: Refs): Fn => {
         return cached;
       }
     }
+
+    return isAny;
   }
 
-  const fn = loadSchemaWithoutNullable(schema as Exclude<TSchema, keyof TBasicMap>, refs);
-  return (schema as Exclude<TSchema, keyof TBasicMap>).nullable === true ? (o) => o === null || fn(o) : fn;
+  const fn = loadSchemaWithoutNullable(schema, refs);
+  return schema.nullable === true ? (o) => o === null || fn(o) : fn;
 };
 
 export function loadSchemaWithoutNullable(schema: Exclude<TType, string>, refs: Refs): Fn {
@@ -204,9 +206,9 @@ export function loadSchemaWithoutNullable(schema: Exclude<TType, string>, refs: 
 
 export default <T extends TSchema>(schema: T): (o: any) => o is InferSchema<T> => {
   if (typeof schema.defs === 'undefined')
-    return loadSchema(schema, null as unknown as Record<string, Fn>) as any;
+    return loadSchema(schema, null as unknown as Refs) as any;
 
-  const refs: Record<string, Fn> = {};
+  const refs: Refs = {};
 
   const defs = schema.defs;
   for (const key in defs) refs[key] = null as any as Fn;

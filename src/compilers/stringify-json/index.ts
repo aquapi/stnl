@@ -1,5 +1,5 @@
-import type { TType, TList, TObject, TTuple, TRef, TConst, TSchema, TTaggedUnion, InferSchema, TBasicMap } from '../index.js';
-import buildSchema from './build.js';
+import type { TType, TList, TObject, TTuple, TRef, TConst, TSchema, TTaggedUnion, InferSchema, TBasicMap } from '../../index.js';
+import buildSchema from '../build.js';
 
 // eslint-disable-next-line
 export const loadType = (type: keyof TBasicMap, id: string, isAlreadyString: boolean): string => /^[iuf].*/.test(type)
