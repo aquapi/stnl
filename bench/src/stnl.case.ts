@@ -1,7 +1,7 @@
+import { defineCase } from "@/utils";
+
 import stnl from 'stnl';
 import build from 'stnl/compilers/validate-json/compose';
-
-import defineCase from '../defineCase';
 
 export default defineCase({
   name: 'stnl',

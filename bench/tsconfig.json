@@ -6,7 +6,8 @@
     "paths": {
       "stnl": ["../src/index.ts"],
       "stnl/*": ["../src/*"],
-      "@data/*": ["../data/*"]
+      "@data/*": ["../data/*"],
+      "@/*": ["./*"]
     },
     "strictNullChecks": true,
     "strict": true

@@ -1,6 +1,7 @@
+import { defineCase } from "@/utils";
+
 import { Validator } from 'jsonschema';
 import { Type } from '@sinclair/typebox';
-import defineCase from '../defineCase';
 
 const v = new Validator();
 

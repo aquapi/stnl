@@ -30,6 +30,6 @@ const nameOf = (path: string, ext: string) => JSON.stringify(path.substring(0, p
   await Bun.write(
     TESTS + 'index.ts',
     items.map((path, i) => `import _${i} from ${nameOf('./' + path, '.ts')};`).join('')
-    + `export default {${items.map((path, i) => `${nameOf('./' + path, '.case.ts')}:_${i}`).join()}};`
+    + `export default {${items.map((path, i) => `${nameOf(path, '.case.ts')}:_${i}`).join()}};`
   );
 }

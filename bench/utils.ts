@@ -7,4 +7,5 @@ export interface Case {
   tests: Partial<Tests>
 }
 
-export default <const T extends Case>(t: T) => t;
+export const defineCase = <const T extends Case>(t: T) => t;
+export const ROOT = import.meta.dir;

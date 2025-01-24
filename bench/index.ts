@@ -1,5 +1,5 @@
 import { summary, run, bench, do_not_optimize } from 'mitata';
-import type { Tests } from './defineCase';
+import type { Tests } from '@/utils';
 import tests from './tests';
 import cases from './src';
 
@@ -10,7 +10,7 @@ for (const c of cases) {
   const name = c.name;
 
   for (const test in c.tests) {
-    const fn = c.tests[test as keyof Tests];
+    const fn = c.tests[test as keyof typeof c.tests];
 
     if (casesMap.has(test))
       casesMap.get(test)!.push([name, fn]);

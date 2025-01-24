@@ -1,4 +1,4 @@
-import defineCase from "../defineCase";
+import { defineCase } from "@/utils";
 import { boolean, number, object, string } from '@badrap/valita';
 
 export default defineCase({

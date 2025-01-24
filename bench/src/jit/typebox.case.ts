@@ -1,8 +1,8 @@
+import { defineCase } from "@/utils";
+
 import { TypeSystemPolicy } from '@sinclair/typebox/system';
 import { TypeCompiler } from '@sinclair/typebox/compiler';
-
 import { Type } from '@sinclair/typebox';
-import defineCase from '../../defineCase';
 
 TypeSystemPolicy.AllowArrayObject = true;
 TypeSystemPolicy.AllowNaN = true;
