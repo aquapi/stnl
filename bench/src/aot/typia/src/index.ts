@@ -2,7 +2,7 @@ import { defineCase } from "@/utils";
 import { createIs } from "typia";
 
 export default defineCase({
-  name: 'aot - typia',
+  name: 'typia - aot',
   tests: {
     assertLoose: createIs<{
       number: number,
