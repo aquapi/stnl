@@ -1,10 +1,10 @@
 import stnl from 'stnl';
-import compose from 'stnl/compilers/validate-json/compose';
+import { build } from 'stnl/compilers/validate-json';
 
-import defineCase from '../defineCase';
+import defineCase from '../../defineCase';
 
 export default defineCase({
-  name: 'stnl',
+  name: 'stnl - jit',
   tests: {
     assertLoose: (() => {
       const schema = stnl({
@@ -25,7 +25,7 @@ export default defineCase({
         }
       });
 
-      return compose(schema);
+      return build(schema);
     })()
   }
 });

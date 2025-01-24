@@ -4,5 +4,12 @@
     "@sinclair/typebox": "^0.34.14",
     "jsonschema": "^1.5.0",
     "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "typescript": "~5.7.3"
+  },
+  "scripts": {
+    "start": "bun prepare.ts && bun index.ts",
+    "start:node": "bun prepare.ts && bun tsx --expose-gc --allow-natives-syntax index.ts"
   }
 }

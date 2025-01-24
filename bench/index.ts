@@ -23,7 +23,7 @@ for (const c of cases) {
 casesMap.forEach((val, key) => {
   summary(() => {
     console.log('Start bench:', key);
-    const suite = tests[key as keyof Tests].map((t) => t.data);
+    const suite = tests[key as keyof typeof tests].map((t) => t.data);
 
     for (const test of val) {
       const fn = test[1];
