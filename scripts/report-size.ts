@@ -6,7 +6,6 @@ const sizes: {
   entry: string,
   size: number,
   minified: number,
-  gzip: number,
   minifiedGzip: number,
 }[] = [];
 
@@ -28,7 +27,6 @@ for await (const path of new Bun.Glob('**/*.js').scan(DIR)) {
     entry: path,
     size: file.size,
     minified: Buffer.from(minfiedCode).byteLength,
-    gzip: Bun.gzipSync(code).byteLength,
     minifiedGzip: Bun.gzipSync(minfiedCode).byteLength
   });
 }
@@ -40,6 +38,5 @@ console.table(sizes.map((val) => ({
   Entry: val.entry,
   Size: toByte(val.size),
   Minify: toByte(val.minified),
-  GZIP: toByte(val.gzip),
   "Minify GZIP": toByte(val.minifiedGzip)
 })));
