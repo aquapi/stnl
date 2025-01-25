@@ -2,6 +2,7 @@
   "dependencies": {
     "@badrap/valita": "^0.4.2",
     "@sinclair/typebox": "^0.34.14",
+    "ajv": "^8.17.1",
     "jsonschema": "^1.5.0",
     "typia": "^7.6.0",
     "zod": "^3.24.1"
