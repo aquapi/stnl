@@ -4,11 +4,12 @@ const DIR = import.meta.dir + '/src/';
 const TESTS = import.meta.dir + '/tests/';
 
 const nameOf = (path: string, ext: string) => JSON.stringify(path.substring(0, path.lastIndexOf(ext)));
+const tasks: Promise<any>[] = [];
 
 // Run build script
 {
   for (const path of new Glob('**/*.build.ts').scanSync(DIR)) {
-    await Bun.$`bun run ${DIR + path}`;
+    tasks.push(Bun.$`bun run ${DIR + path}`);
   }
 }
 
@@ -16,10 +17,12 @@ const nameOf = (path: string, ext: string) => JSON.stringify(path.substring(0, p
 {
   const items = Array.from(new Glob('**/*.case.ts').scanSync(DIR));
 
-  await Bun.write(
-    DIR + 'index.ts',
-    items.map((path, i) => `import _${i} from ${nameOf('./' + path, '.ts')};`).join('')
-    + `export default [${items.map((_, i) => '_' + i).join()}];`
+  tasks.push(
+    Bun.write(
+      DIR + 'index.ts',
+      items.map((path, i) => `import _${i} from ${nameOf('./' + path, '.ts')};`).join('')
+      + `export default [${items.map((_, i) => '_' + i).join()}];`
+    )
   );
 }
 
@@ -27,9 +30,13 @@ const nameOf = (path: string, ext: string) => JSON.stringify(path.substring(0, p
 {
   const items = Array.from(new Glob('**/*.case.ts').scanSync(TESTS));
 
-  await Bun.write(
-    TESTS + 'index.ts',
-    items.map((path, i) => `import _${i} from ${nameOf('./' + path, '.ts')};`).join('')
-    + `export default {${items.map((path, i) => `${nameOf(path, '.case.ts')}:_${i}`).join()}};`
+  tasks.push(
+    Bun.write(
+      TESTS + 'index.ts',
+      items.map((path, i) => `import _${i} from ${nameOf('./' + path, '.ts')};`).join('')
+      + `export default {${items.map((path, i) => `${nameOf(path, '.case.ts')}:_${i}`).join()}};`
+    )
   );
 }
+
+await Promise.all(tasks);

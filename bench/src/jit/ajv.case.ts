@@ -17,9 +17,11 @@ export default defineCase({
             foo: { type: 'string' },
             num: { type: 'float64' },
             bool: { type: 'boolean' }
-          }
+          },
+          additionalProperties: true
         }
-      }
+      },
+      additionalProperties: true
     })
   }
 });
