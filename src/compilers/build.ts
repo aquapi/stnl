@@ -6,5 +6,5 @@ export default (schema: TSchema, f: (x: TSchema, id: string, decls: string[]) =>
 
   // eslint-disable-next-line
   return Function(
-    `${decls.map((decl, i) => `'use strict';var d${i + 1}=${decl};`).join('')}return (o)=>${content};`)();
+    `'use strict';${decls.map((decl, i) => `var d${i + 1}=${decl};`).join('')}return (o)=>${content};`)();
 };
