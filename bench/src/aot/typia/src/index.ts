@@ -1,5 +1,6 @@
 import { defineCase } from "@/utils";
 import { createIs } from "typia";
+import { createStringify } from "typia/lib/json";
 
 export default defineCase({
   name: 'typia - aot',
@@ -17,6 +18,12 @@ export default defineCase({
         bool: boolean
       },
       items: number[]
+    }>(),
+
+    stringify: createStringify<{
+      name: string,
+      pwd: string,
+      id: number[]
     }>()
   }
 });

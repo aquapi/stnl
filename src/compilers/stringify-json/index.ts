@@ -1,8 +1,10 @@
 import type { TType, TList, TObject, TTuple, TRef, TConst, TSchema, TTaggedUnion, InferSchema, TBasic, TExtendedBasic } from '../../index.js';
 import buildSchema from '../build.js';
 
+export const isSerializableType = (type: TBasic): boolean => (/^[iufb].*/).test(type);
+
 // eslint-disable-next-line
-export const loadType = (type: TBasic, id: string, isAlreadyString: boolean): string => /^[iuf].*/.test(type)
+export const loadType = (type: TBasic, id: string, isAlreadyString: boolean): string => isSerializableType(type)
   ? isAlreadyString ? id : `''+${id}`
   : `JSON.stringify(${id})`;
 
@@ -16,8 +18,16 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, numbe
     if (key === 'type')
       return loadType((schema as TExtendedBasic).type, id, isAlreadyString);
     else if (key === 'item') {
+      const item = (schema as TList).item;
+
+      // Optimize for simple schemas
+      if (typeof item === 'string')
+        return `${str}("["+${id}${isSerializableType(item) ? '' : '.map(JSON.stringify)'}.join()+"]")`;
+      if ('type' in item)
+        return `${str}("["+${id}${isSerializableType(item.type) ? '' : '.map(JSON.stringify)'}.join()+"]")`;
+
       // Handle arrays
-      return `${str}("[" + ${id}.map((o)=>${loadSchema((schema as TList).item, 'o', refs, true)}).join() + "]")`;
+      return `${str}("["+${id}.map((o)=>${loadSchema((schema as TList).item, 'o', refs, true)}).join()+"]")`;
     } else if (key === 'props' || key === 'optionalProps') {
       str += '"{"+(';
 

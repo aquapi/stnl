@@ -1,12 +1,12 @@
 import { defineCase } from "@/utils";
 
-import stnl from 'stnl';
-import build from 'stnl/compilers/validate-json/compose';
+import buildValidateJson from 'stnl/compilers/validate-json/compose';
+import buildStringifyJson from 'stnl/compilers/stringify-json/compose';
 
 export default defineCase({
   name: 'stnl',
   tests: {
-    assertLoose: build({
+    assertLoose: buildValidateJson({
       props: {
         number: 'f64',
         negNumber: 'f64',
@@ -22,6 +22,14 @@ export default defineCase({
           }
         },
         items: { item: 'f64' }
+      }
+    }),
+
+    stringify: buildStringifyJson({
+      props: {
+        name: 'string',
+        pwd: 'string',
+        id: { item: 'f64' }
       }
     })
   }

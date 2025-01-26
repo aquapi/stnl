@@ -10,7 +10,7 @@ export const User = stnl({
       type: 'string',
       minLen: 3
     },
-    age: 'int',
+    age: 'u8',
     pwd: {
       type: 'string',
       minLen: 8,
@@ -61,6 +61,8 @@ import build from 'stnl/compilers/stringify-json/compose';
 const isUser = build(User);
 isUser({ name: 'reve', age: 16, pwd: 'revenode' }); // true
 ```
+
+You should benchmark which approach is faster as it depends on the runtime you're using.
 
 ## Schemas
 

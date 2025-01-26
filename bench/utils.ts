@@ -1,5 +1,6 @@
 export interface Tests {
-  assertLoose: (o: any) => boolean
+  assertLoose: (o: any) => boolean,
+  stringify: (o: any) => string
 }
 
 export interface Case {

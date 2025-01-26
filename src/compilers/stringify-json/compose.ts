@@ -1,4 +1,4 @@
-import type { TType, TList, TTuple, TConst, TSchema, InferSchema, TBasic, TExtendedBasic } from '../../index.js';
+import type { TType, TList, TTuple, TConst, TSchema, InferSchema, TBasic, TExtendedBasic, TRef } from '../../index.js';
 
 type Fn = (o: any) => string;
 type Refs = Record<string, Fn>;
@@ -6,7 +6,11 @@ type Refs = Record<string, Fn>;
 // eslint-disable-next-line
 const stringifyPrimitive = (val: any): string => '' + val;
 // eslint-disable-next-line
+const stringifyPrimitiveArray = (val: any[]) => '[' + val.join() + ']';
+// eslint-disable-next-line
 const primitiveStringifier = (schema: TBasic) => schema === 'any' || schema === 'string' ? JSON.stringify : stringifyPrimitive;
+// eslint-disable-next-line
+const arrayStringifier = (each: (item: any, i: number) => any): Fn => (o: any[]) => '[' + o.map(each).join() + ']';
 
 export const loadSchema = (schema: TType, refs: Refs): Fn => {
   if (typeof schema === 'string')
@@ -26,8 +30,10 @@ export function loadSchemaWithoutNullable(schema: Exclude<TType, string>, refs: 
       return primitiveStringifier((schema as TExtendedBasic).type);
     else if (key === 'item') {
       const stringifyItem = loadSchema((schema as TList).item, refs);
-      // eslint-disable-next-line
-      return (o: any[]) => '[' + o.map(stringifyItem).join() + ']';
+
+      return stringifyItem === stringifyPrimitive
+        ? stringifyPrimitiveArray
+        : arrayStringifier(stringifyItem);
     } else if (key === 'props' || key === 'optionalProps') {
       // TODO
       return JSON.stringify;
@@ -40,12 +46,10 @@ export function loadSchemaWithoutNullable(schema: Exclude<TType, string>, refs: 
     } else if (key === 'ref') {
       // Lazy loading
       let fn: Fn | undefined;
-      return (o) => (fn ??= refs[key])(o);
+      return (o) => (fn ??= refs[(schema as TRef).ref])(o);
     } else if (key === 'values') {
       const values = (schema as TTuple).values.map((val) => loadSchema(val, refs));
-      const stringifyItem = (o: any, i: number): string => values[i](o);
-      // eslint-disable-next-line
-      return (o) => '[' + o.map(stringifyItem).join() + ']';
+      return arrayStringifier((o: any, i: number): string => values[i](o));
     } else if (key === 'allOf' || key === 'anyOf')
       return JSON.stringify;
   }

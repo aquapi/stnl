@@ -25,22 +25,23 @@ for (const c of cases) {
 // Register to mitata
 casesMap.forEach((val, key) => {
   summary(() => {
-    console.log('Start bench:', key);
+    console.log('Validating:', key);
 
     const suite = tests[key as keyof typeof tests];
     const suiteData = suite.map((t) => t.data);
 
     for (const test of val) {
+      console.log('- Checking:', test[0]);
       const fn = test[1];
 
       // Check if function validate correctly
-      suite.forEach((t) => t.validate(fn));
+      suite.forEach((t) => t.validate(fn as any));
 
       // Try to optimize
       for (let i = 0; i < 100; i++)
-        do_not_optimize(suiteData.map(fn));
+        do_not_optimize(suiteData.map(fn as any));
 
-      bench(test[0], () => do_not_optimize(suiteData.map(fn))).gc('inner');
+      bench(test[0] + ` (${key})`, () => do_not_optimize(suiteData.map(fn as any))).gc('inner');
     }
   });
 });
