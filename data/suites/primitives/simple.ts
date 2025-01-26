@@ -1,5 +1,5 @@
-import type { Suite, Test } from '../types';
-import { negates } from '../utils';
+import type { Suite, Test } from '../../types';
+import { negates } from '../../utils';
 
 const objectTests: Test[] = [
   {

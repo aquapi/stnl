@@ -1,3 +1,5 @@
-import primitives from './primitives';
+import primitivesSimple from './primitives/simple';
+import primitivesString from './primitives/string';
+import primitivesInt from './primitives/int';
 
-export default [...primitives];
+export default [...primitivesSimple, ...primitivesString, ...primitivesInt];

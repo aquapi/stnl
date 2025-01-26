@@ -1,4 +1,4 @@
-import type { TType, TString, TList, TObject, TTuple, TIntersection, TUnion, TRef, TConst, TSchema, TTaggedUnion, InferSchema, TBasicMap } from '../../index.js';
+import type { TType, TString, TList, TObject, TTuple, TIntersection, TUnion, TRef, TConst, TSchema, TTaggedUnion, InferSchema, TBasic, TExtendedBasic, TFloat, TInt } from '../../index.js';
 import buildSchema from '../build.js';
 
 export const loadObjectProps = (schema: TObject, id: string, refs: Record<string, number>): string => {
@@ -6,12 +6,12 @@ export const loadObjectProps = (schema: TObject, id: string, refs: Record<string
 
   // Required props
   let props = schema.props;
-  if (typeof props !== 'undefined')
+  if (props != null)
     for (const itemKey in props) str += `&&${loadSchema(props[itemKey], `${id}.${itemKey}`, refs)}`;
 
   // Optional props
   props = schema.optionalProps;
-  if (typeof props !== 'undefined')
+  if (props != null)
     for (const itemKey in props) str += `&&(typeof ${id}.${itemKey}==='undefined'||${loadSchema(props[itemKey], `${id}.${itemKey}`, refs)})`;
 
   return str;
@@ -21,11 +21,13 @@ export const loadLenChecks = (schema: TString | TList, id: string): string =>
   // eslint-disable-next-line
   (typeof schema.maxLen === 'number' ? `&&${id}.length<${(schema as TString).maxLen! + 1}` : '') + (typeof schema.minLen === 'number' ? `&&${id}.length>${(schema as TString).minLen! - 1}` : '');
 
-export const loadType = (type: keyof TBasicMap, id: string): string => {
+export const loadIntLimitChecks = (schema: TInt, typeMin: number, typeMax: number, id: string): string => `&&${id}>${(schema.min ?? typeMin) - 1}&&${id}<${(schema.max ?? typeMax) + 1}`;
+
+export const loadType = (type: TBasic, id: string): string => {
   switch (type.charCodeAt(0)) {
     // Any
     case 97:
-      return `typeof ${id}==='undefined'`;
+      return `typeof ${id}!=='undefined'`;
 
     // Bool
     case 98:
@@ -63,10 +65,48 @@ export function loadSchema(schema: TType, id: string, refs: Record<string, numbe
 
   loop: for (const key in schema) {
     if (key === 'type') {
-      str += `typeof ${id}==='string'${loadLenChecks(schema as TString, id)}`;
-      break loop;
-    } else if (key === 'items') {
-      str += `Array.isArray(${id})${loadLenChecks(schema as TList, id)}&&${id}.every((o)=>${loadSchema((schema as TList).items, 'o', refs)})`;
+      switch ((schema as TExtendedBasic).type.charCodeAt(0)) {
+        // Float
+        case 102:
+          str += `typeof ${id}==='number'`;
+
+          // No optimization
+          if ((schema as TFloat).max != null)
+            str += `&&${id}<=${(schema as TFloat).max!}`;
+          if ((schema as TFloat).min != null)
+            str += `&&${id}>=${(schema as TFloat).min!}`;
+          if ((schema as TFloat).exclusiveMax != null)
+            str += `&&${id}<${(schema as TFloat).exclusiveMax!}`;
+          if ((schema as TFloat).exclusiveMin != null)
+            str += `&&${id}>${(schema as TFloat).exclusiveMin!}`;
+
+          break loop;
+
+        // Signed integers
+        case 105: {
+          const limit = 2 ** (+(schema as TExtendedBasic).type.slice(1) - 1);
+          str += `Number.isInteger(${id})${loadIntLimitChecks(schema as TInt, -limit, limit - 1, id)}`;
+          break loop;
+        }
+
+        // String
+        case 115:
+          str += `typeof ${id}==='string'${loadLenChecks(schema as TString, id)}`;
+          break loop;
+
+        // Unsigned integers
+        case 117: {
+          str += `Number.isInteger(${id})${loadIntLimitChecks(
+            schema as TInt,
+            // eslint-disable-next-line
+            0, (2 ** +(schema as TExtendedBasic).type.slice(1)) - 1,
+            id
+          )}`;
+          break loop;
+        }
+      }
+    } else if (key === 'item') {
+      str += `Array.isArray(${id})${loadLenChecks(schema as TList, id)}&&${id}.every((o)=>${loadSchema((schema as TList).item, 'o', refs)})`;
       break;
     } else if (key === 'props' || key === 'optionalProps') {
       str += `typeof ${id}==='object'`;
@@ -75,7 +115,7 @@ export function loadSchema(schema: TType, id: string, refs: Record<string, numbe
 
       str += loadObjectProps(schema as TObject, id, refs);
       break;
-    } else if (key === 'tag' || key === 'maps') {
+    } else if (key === 'tag' || key === 'map') {
       str += `typeof ${id}==='object'&&`;
       if (schema.nullable !== true)
         str += `${id}!==null&&`;
@@ -83,7 +123,7 @@ export function loadSchema(schema: TType, id: string, refs: Record<string, numbe
       const tagId = `${id}.${(schema as TTaggedUnion).tag}`;
       str += `typeof ${tagId}==='string'&&`;
 
-      const maps = (schema as TTaggedUnion).maps;
+      const maps = (schema as TTaggedUnion).map;
       for (const val in maps) str += `${tagId}===${JSON.stringify(val)}?true${loadObjectProps(maps[val], id, refs)}:`;
 
       str += 'false';

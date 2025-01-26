@@ -1,8 +1,8 @@
-import type { TType, TList, TObject, TTuple, TRef, TConst, TSchema, TTaggedUnion, InferSchema, TBasicMap } from '../../index.js';
+import type { TType, TList, TObject, TTuple, TRef, TConst, TSchema, TTaggedUnion, InferSchema, TBasic, TExtendedBasic } from '../../index.js';
 import buildSchema from '../build.js';
 
 // eslint-disable-next-line
-export const loadType = (type: keyof TBasicMap, id: string, isAlreadyString: boolean): string => /^[iuf].*/.test(type)
+export const loadType = (type: TBasic, id: string, isAlreadyString: boolean): string => /^[iuf].*/.test(type)
   ? isAlreadyString ? id : `''+${id}`
   : `JSON.stringify(${id})`;
 
@@ -13,9 +13,11 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, numbe
   let str = schema.nullable === true ? `${id}===null?'null':` : '';
 
   for (const key in schema) {
-    if (key === 'items') {
+    if (key === 'type')
+      return loadType((schema as TExtendedBasic).type, id, isAlreadyString);
+    else if (key === 'item') {
       // Handle arrays
-      return `${str}("[" + ${id}.map((o)=>${loadSchema((schema as TList).items, 'o', refs, true)}).join() + "]")`;
+      return `${str}("[" + ${id}.map((o)=>${loadSchema((schema as TList).item, 'o', refs, true)}).join() + "]")`;
     } else if (key === 'props' || key === 'optionalProps') {
       str += '"{"+(';
 
@@ -44,7 +46,7 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, numbe
 
       // Remove the leading ','
       return `${str})${hasRequiredKeys ? '' : '.slice(1)'}+"}"`;
-    } else if (key === 'tag' || key === 'maps') {
+    } else if (key === 'tag' || key === 'map') {
       str += '"{"+(';
 
       const tag = (schema as TTaggedUnion).tag;
@@ -53,7 +55,7 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, numbe
 
       // The tag property
       const tagId = `${id}.${(schema as TTaggedUnion).tag}`;
-      const maps = (schema as TTaggedUnion).maps;
+      const maps = (schema as TTaggedUnion).map;
 
       let tmpSchema: TObject;
       let props: Record<string, TType> | undefined;
@@ -98,7 +100,7 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, numbe
 
       // eslint-disable-next-line
       return str + ')+"]"';
-    } else if (key === 'allOf' || key === 'anyOf' || key === 'type') {
+    } else if (key === 'allOf' || key === 'anyOf') {
       // Union, intersection and string
       return `${str}JSON.stringify(${id})`;
     }

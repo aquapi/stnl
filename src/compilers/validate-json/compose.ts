@@ -1,4 +1,4 @@
-import type { TType, TString, TList, TObject, TTuple, TIntersection, TUnion, TConst, TSchema, InferSchema, TTaggedUnion } from '../../index.js';
+import type { TType, TString, TList, TObject, TTuple, TIntersection, TUnion, TConst, TSchema, InferSchema, TTaggedUnion, TExtendedBasic, TFloat, TBasic, TInt } from '../../index.js';
 
 type Fn = (o: any) => boolean;
 type Refs = Record<string, Fn>;
@@ -9,6 +9,29 @@ const isAny: Fn = (o) => typeof o !== 'undefined';
 const isString: Fn = (o) => typeof o === 'string';
 
 const isInt = new Map<string, Fn>();
+
+export const loadSignedIntCheck = (type: TBasic): Fn => {
+  let cached = isInt.get(type);
+  if (cached != null) return cached;
+
+  const upperBound = 2 ** (+type.slice(1) - 1);
+  const lowerBound = -upperBound - 1;
+
+  cached = (o) => Number.isInteger(o) && o > lowerBound && o < upperBound;
+  isInt.set(type, cached);
+  return cached;
+};
+
+export const loadUnsignedIntCheck = (type: TBasic): Fn => {
+  let cached = isInt.get(type);
+  if (cached != null) return cached;
+
+  const upperBound = 2 ** +type.slice(1);
+
+  cached = (o) => Number.isInteger(o) && o > -1 && o < upperBound;
+  isInt.set(type, cached);
+  return cached;
+};
 
 export const loadSchema = (schema: TType, refs: Refs): Fn => {
   if (typeof schema === 'string') {
@@ -26,33 +49,16 @@ export const loadSchema = (schema: TType, refs: Refs): Fn => {
         return isFloat;
 
       // Signed integers
-      case 105: {
-        let cached = isInt.get(schema);
-        if (cached != null) return cached;
-
-        const upperBound = 2 ** (+schema.slice(1) - 1);
-        const lowerBound = -upperBound - 1;
-
-        cached = (o) => Number.isInteger(o) && o > lowerBound && o < upperBound;
-        isInt.set(schema, cached);
-        return cached;
-      }
+      case 105:
+        return loadSignedIntCheck(schema);
 
       // String
       case 115:
         return isString;
 
       // Unsigned integers
-      case 117: {
-        let cached = isInt.get(schema);
-        if (cached != null) return cached;
-
-        const upperBound = 2 ** +schema.slice(1);
-
-        cached = (o) => Number.isInteger(o) && o > -1 && o < upperBound;
-        isInt.set(schema, cached);
-        return cached;
-      }
+      case 117:
+        return loadUnsignedIntCheck(schema);
     }
 
     return isAny;
@@ -65,13 +71,46 @@ export const loadSchema = (schema: TType, refs: Refs): Fn => {
 export function loadSchemaWithoutNullable(schema: Exclude<TType, string>, refs: Refs): Fn {
   for (const key in schema) {
     if (key === 'type') {
-      // String
-      const maxLen = ((schema as TString).maxLen ?? Infinity) + 1;
-      const minLen = ((schema as TString).minLen ?? 0) - 1;
+      switch ((schema as TExtendedBasic).type.charCodeAt(0)) {
+        // Float
+        case 102: {
+          const min = (schema as TFloat).min ?? -Infinity;
+          const max = (schema as TFloat).max ?? Infinity;
 
-      return (o) => typeof o === 'string' && o.length > minLen && o.length < maxLen;
-    } else if (key === 'items') {
-      const items = loadSchema((schema as TList).items, refs);
+          const exclusiveMin = (schema as TFloat).exclusiveMin ?? -Infinity;
+          const exclusiveMax = (schema as TFloat).exclusiveMax ?? -Infinity;
+
+          return (o) => typeof o === 'number' && o > exclusiveMin && o >= min && o < exclusiveMax && o <= max;
+        }
+
+        // Signed integers
+        case 105: {
+          const min = ((schema as TInt).min ?? -Infinity) - 1;
+          const max = ((schema as TInt).max ?? Infinity) + 1;
+
+          const f = loadSignedIntCheck((schema as TExtendedBasic).type);
+          return (o) => f(o) && o > min && o < max;
+        }
+
+        // String
+        case 115: {
+          const maxLen = ((schema as TString).maxLen ?? Infinity) + 1;
+          const minLen = ((schema as TString).minLen ?? 0) - 1;
+
+          return (o) => typeof o === 'string' && o.length > minLen && o.length < maxLen;
+        }
+
+        // Unsigned integers
+        case 117: {
+          const min = ((schema as TInt).min ?? 0) - 1;
+          const max = ((schema as TInt).max ?? Infinity) + 1;
+
+          const f = loadUnsignedIntCheck((schema as TExtendedBasic).type);
+          return (o) => f(o) && o > min && o < max;
+        }
+      }
+    } else if (key === 'item') {
+      const items = loadSchema((schema as TList).item, refs);
       const max = ((schema as TList).maxLen ?? Infinity) + 1;
       const min = ((schema as TList).minLen ?? 0) - 1;
 
@@ -113,9 +152,9 @@ export function loadSchemaWithoutNullable(schema: Exclude<TType, string>, refs: 
 
         return true;
       };
-    } else if (key === 'tag' || key === 'maps') {
+    } else if (key === 'tag' || key === 'map') {
       const tag = (schema as TTaggedUnion).tag;
-      const maps = new Map(Object.entries((schema as TTaggedUnion).maps).map((tagVal) => [
+      const maps = new Map(Object.entries((schema as TTaggedUnion).map).map((tagVal) => [
         tagVal[0], [
           tagVal[1].props == null
             ? []

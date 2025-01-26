@@ -1,17 +1,29 @@
-export type NumberType = `${'i' | 'u'}${8 | 16 | 32 | 64}` | `f${32 | 64}`;
+export type IntType = `${'i' | 'u'}${8 | 16 | 32 | 64}`;
+export type FloatType = `f${32 | 64}`;
 
-export interface TBasicMap extends Record<NumberType, number> {
+interface TBasicMap extends Record<IntType | FloatType, number> {
   bool: boolean;
   string: string;
   any: unknown;
 }
 
-export interface TRef {
-  ref: string;
+export type TBasic = keyof TBasicMap;
+
+export interface TInt {
+  type: IntType;
+
+  min?: number;
+  max?: number;
 }
 
-export interface TConst {
-  const: string | number | boolean | bigint | null;
+export interface TFloat {
+  type: FloatType;
+
+  min?: number;
+  max?: number;
+
+  exclusiveMin?: number;
+  exclusiveMax?: number;
 }
 
 export interface TString {
@@ -21,17 +33,27 @@ export interface TString {
   maxLen?: number;
 }
 
+export type TExtendedBasic = TString | TFloat | TInt;
+
+export interface TRef {
+  ref: string;
+}
+
+export interface TConst {
+  const: string | number | boolean | null;
+}
+
 export interface TObject {
   props?: Record<string, TType>;
   optionalProps?: Record<string, TType>;
 }
 
 export interface TTuple {
-  values: TType[];
+  values: TTypeList;
 }
 
 export interface TList {
-  items: TType;
+  item: TType;
 
   minLen?: number;
   maxLen?: number;
@@ -47,14 +69,14 @@ export interface TIntersection {
 
 export interface TTaggedUnion {
   tag: string;
-  maps: Record<string, TObject>;
+  map: Record<string, TObject>;
 }
 
 export type TType = ((
-  TRef | TString | TConst | TObject | TTuple | TList | TUnion | TIntersection | TTaggedUnion
+  TRef | TExtendedBasic | TConst | TObject | TTuple | TList | TUnion | TIntersection | TTaggedUnion
 ) & {
   nullable?: boolean
-}) | keyof TBasicMap;
+}) | TBasic;
 
 // Force list to be more than 1 item
 export type TTypeList = [TType, ...TType[]];
@@ -68,15 +90,16 @@ declare const REFSYM: unique symbol;
 interface Ref<T extends string> { [REFSYM]: T }
 
 export type InferType<T extends TType> =
-  T extends keyof TBasicMap ? TBasicMap[T] :
-    T extends TConst ? T['const'] :
-      T extends TObject ? InferObject<T> :
-        T extends TTuple ? InferList<T['values']> :
-          T extends TList ? InferType<T['items']>[] :
-            T extends TUnion ? InferUnion<T['anyOf']> :
-              T extends TIntersection ? InferIntersection<T['allOf']> :
-                T extends TTaggedUnion ? InferMaps<T['maps'], T['tag']> :
-                  T extends TRef ? Ref<T['ref']> : unknown;
+  T extends TBasic ? TBasicMap[T] :
+    T extends TExtendedBasic ? TBasicMap[T['type']] :
+      T extends TConst ? T['const'] :
+        T extends TObject ? InferObject<T> :
+          T extends TTuple ? InferList<T['values']> :
+            T extends TList ? InferType<T['item']>[] :
+              T extends TUnion ? InferUnion<T['anyOf']> :
+                T extends TIntersection ? InferIntersection<T['allOf']> :
+                  T extends TTaggedUnion ? InferMaps<T['map'], T['tag']> :
+                    T extends TRef ? Ref<T['ref']> : unknown;
 
 export type InferObject<T extends TObject> = {
   [K in keyof T['props']]: InferType<(T['props'] & {})[K]>
@@ -84,7 +107,7 @@ export type InferObject<T extends TObject> = {
   [K in keyof T['optionalProps']]?: InferType<(T['optionalProps'] & {})[K]>
 };
 
-export type InferMaps<T extends TTaggedUnion['maps'], Tag extends string> = {
+export type InferMaps<T extends TTaggedUnion['map'], Tag extends string> = {
   [K in keyof T]: Record<Tag, K> & InferObject<T[K]>
 }[keyof T];
 
