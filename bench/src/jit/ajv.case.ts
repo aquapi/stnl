@@ -19,6 +19,9 @@ export default defineCase({
             bool: { type: 'boolean' }
           },
           additionalProperties: true
+        },
+        items: {
+          elements: { type: 'float64' }
         }
       },
       additionalProperties: true

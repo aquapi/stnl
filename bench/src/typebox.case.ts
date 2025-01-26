@@ -23,6 +23,7 @@ export default defineCase({
           num: Type.Number(),
           bool: Type.Boolean(),
         }),
+        items: Type.Array(Type.Number())
       });
 
       return (o) => Value.Check(schema, o);

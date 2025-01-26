@@ -1,4 +1,14 @@
-import { randomStr } from "./utils";
+import { randomStr, randPick, randRemoveProp } from "./utils";
+
+function trueValidator(this: { data: any }, fn: (o: any) => boolean) {
+  if (!fn(this.data))
+    throw new Error('A validator is invalid!');
+}
+
+function falseValidator(this: { data: any }, fn: (o: any) => boolean) {
+  if (fn(this.data))
+    throw new Error('A validator is invalid!');
+}
 
 const valid = () => ({
   data: {
@@ -12,9 +22,29 @@ const valid = () => ({
       foo: randomStr(),
       num: Math.random() * 78,
       bool: Math.random() > 0.5
-    }
+    },
+    items: new Array(3 + Math.round(Math.random() * 9)).fill(0).map(Math.random)
   },
-  valid: true
+  validate: trueValidator
 });
 
-export default Array.from({ length: 500 }, valid);
+const invalid = () => {
+  const data = valid();
+  randRemoveProp(data.data);
+  data.validate = falseValidator;
+  return data;
+};
+
+const deepInvalid = () => {
+  const data = valid();
+  randRemoveProp(data.data.deeplyNested);
+  data.validate = falseValidator;
+  return data;
+}
+
+export default Array.from({ length: 500 }, (_, i) => i % 10 === 0
+  ? invalid()
+  : i % 20 === 0
+    ? deepInvalid()
+    : valid()
+);

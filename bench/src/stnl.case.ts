@@ -20,7 +20,8 @@ export default defineCase({
             num: 'f64',
             bool: 'bool'
           }
-        }
+        },
+        items: { item: 'f64' }
       }
     })
   }

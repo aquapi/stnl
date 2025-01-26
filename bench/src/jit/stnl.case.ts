@@ -1,6 +1,4 @@
 import { defineCase } from "@/utils";
-
-import stnl from 'stnl';
 import { build } from 'stnl/compilers/validate-json';
 
 export default defineCase({
@@ -20,7 +18,8 @@ export default defineCase({
             num: 'f64',
             bool: 'bool'
           }
-        }
+        },
+        items: { item: 'f64' }
       }
     })
   }

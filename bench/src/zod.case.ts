@@ -1,5 +1,5 @@
 import { defineCase } from "@/utils";
-import { boolean, number, object, string } from 'zod';
+import { array, boolean, number, object, string } from 'zod';
 
 export default defineCase({
   name: 'zod',
@@ -16,7 +16,8 @@ export default defineCase({
           foo: string(),
           num: number(),
           bool: boolean()
-        })
+        }),
+        items: array(number())
       });
 
       return (o) => schema.safeParse(o).success;

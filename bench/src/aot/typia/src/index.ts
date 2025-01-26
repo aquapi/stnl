@@ -15,7 +15,8 @@ export default defineCase({
         foo: string,
         num: number,
         bool: boolean
-      }
+      },
+      items: number[]
     }>()
   }
 });

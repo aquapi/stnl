@@ -26,11 +26,21 @@ for (const c of cases) {
 casesMap.forEach((val, key) => {
   summary(() => {
     console.log('Start bench:', key);
-    const suite = tests[key as keyof typeof tests].map((t) => t.data);
+
+    const suite = tests[key as keyof typeof tests];
+    const suiteData = suite.map((t) => t.data);
 
     for (const test of val) {
       const fn = test[1];
-      bench(test[0], () => do_not_optimize(suite.map(fn))).gc('inner');
+
+      // Check if function validate correctly
+      suite.forEach((t) => t.validate(fn));
+
+      // Try to optimize
+      for (let i = 0; i < 100; i++)
+        do_not_optimize(suiteData.map(fn));
+
+      bench(test[0], () => do_not_optimize(suiteData.map(fn))).gc('inner');
     }
   });
 });

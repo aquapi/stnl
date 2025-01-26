@@ -1,5 +1,5 @@
 import { defineCase } from "@/utils";
-import { boolean, number, object, string } from '@badrap/valita';
+import { array, boolean, number, object, string } from '@badrap/valita';
 
 export default defineCase({
   name: '@badrap/valita',
@@ -16,7 +16,8 @@ export default defineCase({
           foo: string(),
           num: number(),
           bool: boolean()
-        })
+        }),
+        items: array(number())
       });
 
       return (o) => schema.try(o).ok;
