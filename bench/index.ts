@@ -3,13 +3,14 @@ import type { Tests } from '@/utils';
 import tests from './tests';
 import cases from './src';
 
+import { exclude, include } from './filter';
+
 const casesMap = new Map<string, [string, Tests[keyof Tests]][]>();
-const exclude = (name: string) => name.includes('-') && name !== 'ajv - jit';
 
 // Map cases
 for (const c of cases) {
   const name = c.name;
-  if (exclude(name)) continue;
+  if (exclude(name) || !include(name)) continue;
 
   for (const test in c.tests) {
     const fn = c.tests[test as keyof typeof c.tests];
