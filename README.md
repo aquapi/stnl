@@ -178,14 +178,6 @@ stnl({
 });
 ```
 
-### Unions
-```ts
-stnl({
-  // Match any of the schemas specified
-  anyOf: ['u8', 'u16']
-});
-```
-
 ### Intersections
 ```ts
 stnl({

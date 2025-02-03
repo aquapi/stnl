@@ -1,4 +1,4 @@
-import type { TType, TString, TList, TObject, TTuple, TIntersection, TUnion, TRef, TConst, TSchema, TTaggedUnion, TBasic, TExtendedBasic, TFloat, TInt } from '../index.js';
+import type { TType, TString, TList, TObject, TTuple, TIntersection, TRef, TConst, TSchema, TTaggedUnion, TBasic, TExtendedBasic, TFloat, TInt } from '../index.js';
 
 type Value = string | number | boolean | null;
 type Keywords = '$defs' | '$ref' | 'minimum' | 'maximum' |
@@ -193,8 +193,6 @@ export function loadSchema(schema: TType, output: OutputSchema): void {
       return;
     } else if (key === 'allOf')
       output.allOf = (schema as TIntersection).allOf.map(loadSchemaYield) as any;
-    else if (key === 'anyOf')
-      output.anyOf = (schema as TUnion).anyOf.map(loadSchemaYield) as any;
   }
 }
 

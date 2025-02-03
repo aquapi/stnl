@@ -1,4 +1,4 @@
-import type { TType, TString, TList, TObject, TTuple, TIntersection, TUnion, TRef, TConst, TSchema, TTaggedUnion, InferSchema, TBasic, TExtendedBasic, TFloat, TInt } from '../../index.js';
+import type { TType, TString, TList, TObject, TTuple, TIntersection, TRef, TConst, TSchema, TTaggedUnion, InferSchema, TBasic, TExtendedBasic, TFloat, TInt } from '../../index.js';
 import buildSchema from '../build.js';
 
 export const loadObjectProps = (schema: TObject, id: string, refs: Record<string, number>): string => {
@@ -143,20 +143,6 @@ export function loadSchema(schema: TType, id: string, refs: Record<string, numbe
 
       for (let i = 1, l = schemas.length; i < l; i++) str += `&&(${loadSchema(schemas[i], id, refs)})`;
 
-      break;
-    } else if (key === 'anyOf') {
-      // Handle unions
-      const schemas = (schema as TUnion).anyOf;
-
-      str += '(';
-      loadSchema(schemas[0], id, refs);
-
-      for (let i = 1, l = schemas.length; i < l; i++) {
-        str += ')||(';
-        str += loadSchema(schemas[i], id, refs);
-      }
-
-      str += ')';
       break;
     }
   }
