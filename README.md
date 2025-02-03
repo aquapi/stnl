@@ -99,6 +99,8 @@ The output JSON schema for the schema above will be:
 }
 ```
 
+Note that JSON schema compilation is significantly slower than stnl so only use this for compability reasons.
+
 ## Schemas
 
 ### Basic types
