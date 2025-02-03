@@ -121,7 +121,7 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, numbe
 };
 
 const f = (schema: TSchema, id: string, decls: string[]): string => {
-  if (typeof schema.defs === 'undefined')
+  if (schema.defs == null)
     return loadSchema(schema, id, null as unknown as Record<string, number>, false);
 
   const refs: Record<string, number> = {};

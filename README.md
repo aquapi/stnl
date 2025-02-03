@@ -64,6 +64,41 @@ isUser({ name: 'reve', age: 16, pwd: 'revenode' }); // true
 
 You should benchmark which approach is faster as it depends on the runtime you're using.
 
+## Transform
+
+### JSON schema
+To transform to a JSON schema for usage with other standards (such as OpenAPI).
+```ts
+import transform from 'stnl/transform/json-schema';
+
+// Transform to a draft-7 JSON schema
+transform(User);
+```
+
+The output JSON schema for the schema above will be:
+```ts
+{
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+      minLength: 3,
+    },
+    age: {
+      type: 'integer',
+      minimum: 0,
+      maximum: 255,
+    },
+    pwd: {
+      type: 'string',
+      minLength: 8,
+      maxLength: 16,
+    },
+  },
+  required: ['name', 'age', 'pwd']
+}
+```
+
 ## Schemas
 
 ### Basic types

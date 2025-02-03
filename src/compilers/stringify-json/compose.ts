@@ -58,7 +58,7 @@ export function loadSchemaWithoutNullable(schema: Exclude<TType, string>, refs: 
 }
 
 export default <T extends TSchema>(schema: T): (o: InferSchema<T>) => string => {
-  if (typeof schema.defs === 'undefined')
+  if (schema.defs == null)
     return loadSchema(schema, null as unknown as Refs) as any;
 
   const refs: Refs = {};
