@@ -24,6 +24,6 @@ export default defineCase({
       name: string,
       pwd: string,
       id: number[]
-    }>()
+    }[]>()
   }
 });

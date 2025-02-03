@@ -1,2 +1,2 @@
-export const exclude = (name: string) => name.includes('-');
+export const exclude = (name: string) => false;
 export const include = (name: string) => true;

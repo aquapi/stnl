@@ -7,11 +7,11 @@ function validator(this: { data: any }, fn: (o: any) => string) {
 }
 
 const valid = () => ({
-  data: {
+  data: new Array(5 + Math.round(Math.random() * 3)).fill(0).map(() => ({
     name: randomStr(3),
     pwd: randomStr(10),
     id: new Array(6 + Math.round(Math.random() * 9)).fill(0).map(Math.random)
-  },
+  })),
   validate: validator
 });
 

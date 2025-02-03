@@ -26,10 +26,12 @@ export default defineCase({
     }),
 
     stringify: buildStringifyJson({
-      props: {
-        name: 'string',
-        pwd: 'string',
-        id: { item: 'f64' }
+      item: {
+        props: {
+          name: 'string',
+          pwd: 'string',
+          id: { item: 'f64' }
+        }
       }
     })
   }

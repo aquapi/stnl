@@ -28,11 +28,13 @@ export default defineCase({
     }),
 
     stringify: new Ajv().compileSerializer({
-      properties: {
-        name: { type: 'string' },
-        pwd: { type: 'string' },
-        id: {
-          elements: { type: 'float64' }
+      elements: {
+        properties: {
+          name: { type: 'string' },
+          pwd: { type: 'string' },
+          id: {
+            elements: { type: 'float64' }
+          }
         }
       }
     })
