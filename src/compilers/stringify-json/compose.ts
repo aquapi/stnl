@@ -50,8 +50,7 @@ export function loadSchemaWithoutNullable(schema: Exclude<TType, string>, refs: 
     } else if (key === 'values') {
       const values = (schema as TTuple).values.map((val) => loadSchema(val, refs));
       return arrayStringifier((o: any, i: number): string => values[i](o));
-    } else if (key === 'allOf')
-      return JSON.stringify;
+    }
   }
 
   throw new Error('Invalid schema');

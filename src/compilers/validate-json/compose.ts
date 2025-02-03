@@ -1,4 +1,4 @@
-import type { TType, TString, TList, TObject, TTuple, TIntersection, TConst, TSchema, InferSchema, TTaggedUnion, TExtendedBasic, TFloat, TBasic, TInt, TRef } from '../../index.js';
+import type { TType, TString, TList, TObject, TTuple, TConst, TSchema, InferSchema, TTaggedUnion, TExtendedBasic, TFloat, TBasic, TInt, TRef } from '../../index.js';
 
 type Fn = (o: any) => boolean;
 type Refs = Record<string, Fn>;
@@ -207,18 +207,6 @@ export function loadSchemaWithoutNullable(schema: Exclude<TType, string>, refs: 
 
         for (let i = 0; i < len; i++) {
           if (!values[i](o[i]))
-            return false;
-        }
-
-        return true;
-      };
-    } else if (key === 'allOf') {
-      // Handle intersection
-      const schemas = (schema as TIntersection).allOf.map((val) => loadSchema(val, refs));
-
-      return (o) => {
-        for (let i = 0; i < schemas.length; i++) {
-          if (!schemas[i](o))
             return false;
         }
 

@@ -59,17 +59,13 @@ export interface TList {
   maxLen?: number;
 }
 
-export interface TIntersection {
-  allOf: TTypeList;
-}
-
 export interface TTaggedUnion {
   tag: string;
   map: Record<string, TObject>;
 }
 
 export type TType = ((
-  TRef | TExtendedBasic | TConst | TObject | TTuple | TList | TIntersection | TTaggedUnion
+  TRef | TExtendedBasic | TConst | TObject | TTuple | TList | TTaggedUnion
 ) & {
   nullable?: boolean
 }) | TBasic;
@@ -92,9 +88,8 @@ export type InferType<T extends TType> =
         T extends TObject ? InferObject<T> :
           T extends TTuple ? InferList<T['values']> :
             T extends TList ? InferType<T['item']>[] :
-              T extends TIntersection ? InferIntersection<T['allOf']> :
-                T extends TTaggedUnion ? InferMaps<T['map'], T['tag']> :
-                  T extends TRef ? Ref<T['ref']> : unknown;
+              T extends TTaggedUnion ? InferMaps<T['map'], T['tag']> :
+                T extends TRef ? Ref<T['ref']> : unknown;
 
 export type InferObject<T extends TObject> = {
   [K in keyof T['props']]: InferType<(T['props'] & {})[K]>
@@ -110,10 +105,6 @@ export type InferList<T extends TType[]> =
   T extends [infer F extends TType, ...infer R extends TType[]]
     // @ts-expect-error It's not infinite
     ? [InferType<F>, ...InferList<R>] : [];
-
-export type InferIntersection<T extends TType[]> =
-  T extends [infer F extends TType, ...infer R extends TType[]]
-    ? InferType<F> & InferIntersection<R> : any;
 
 export type InferDefs<T extends TSchema> = {
   [K in keyof T['defs']]: InferType<(T['defs'] & {})[K]>

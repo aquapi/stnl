@@ -110,9 +110,7 @@ export const loadSchema = (schema: TType, id: string, refs: Record<string, numbe
 
       // eslint-disable-next-line
       return str + ')+"]"';
-    } else if (key === 'allOf')
-      // Union, intersection and string
-      return `${str}JSON.stringify(${id})`;
+    }
   }
 
   // eslint-disable-next-line

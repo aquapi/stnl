@@ -1,4 +1,4 @@
-import type { TType, TString, TList, TObject, TTuple, TIntersection, TRef, TConst, TSchema, TTaggedUnion, InferSchema, TBasic, TExtendedBasic, TFloat, TInt } from '../../index.js';
+import type { TType, TString, TList, TObject, TTuple, TRef, TConst, TSchema, TTaggedUnion, InferSchema, TBasic, TExtendedBasic, TFloat, TInt } from '../../index.js';
 import buildSchema from '../build.js';
 
 export const loadObjectProps = (schema: TObject, id: string, refs: Record<string, number>): string => {
@@ -134,14 +134,6 @@ export function loadSchema(schema: TType, id: string, refs: Record<string, numbe
         l = schemas.length;
         i < l; i++
       ) str += `&&(${loadSchema(schemas[i], `${id}[${i}]`, refs)})`;
-
-      break;
-    } else if (key === 'allOf') {
-      // Handle intersection
-      const schemas = (schema as TIntersection).allOf;
-      str += loadSchema(schemas[0], id, refs);
-
-      for (let i = 1, l = schemas.length; i < l; i++) str += `&&(${loadSchema(schemas[i], id, refs)})`;
 
       break;
     }

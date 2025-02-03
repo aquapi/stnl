@@ -1,4 +1,4 @@
-import type { TType, TString, TList, TObject, TTuple, TIntersection, TRef, TConst, TSchema, TTaggedUnion, TBasic, TExtendedBasic, TFloat, TInt } from '../index.js';
+import type { TType, TString, TList, TObject, TTuple, TRef, TConst, TSchema, TTaggedUnion, TBasic, TExtendedBasic, TFloat, TInt } from '../index.js';
 
 type Value = string | number | boolean | null;
 type Keywords = '$defs' | '$ref' | 'minimum' | 'maximum' |
@@ -84,12 +84,6 @@ export const loadRange = (schema: TInt | TFloat, output: OutputSchema): void => 
     output.maximum = schema.max;
   if (schema.min != null)
     output.minimum = schema.min;
-};
-
-export const loadSchemaYield = (schema: TType): OutputSchema => {
-  const output: OutputSchema = {};
-  loadSchema(schema, output);
-  return output;
 };
 
 export function loadSchema(schema: TType, output: OutputSchema): void {
@@ -191,8 +185,7 @@ export function loadSchema(schema: TType, output: OutputSchema): void {
       output.prefixItems = vals;
 
       return;
-    } else if (key === 'allOf')
-      output.allOf = (schema as TIntersection).allOf.map(loadSchemaYield) as any;
+    }
   }
 }
 
