@@ -178,25 +178,6 @@ stnl({
 });
 ```
 
-### Intersections
-```ts
-stnl({
-  // Match all of the schemas specified
-  allOf: [
-    {
-      props: {
-        name: 'string'
-      }
-    },
-    {
-      props: {
-        pwd: 'string'
-      }
-    }
-  ]
-});
-```
-
 ### Tagged unions
 ```ts
 stnl({
