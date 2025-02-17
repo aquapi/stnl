@@ -1,4 +1,4 @@
-import { defineCase } from "@/utils";
+import { defineCase } from "@utils";
 import { createIs } from "typia";
 import { createStringify } from "typia/lib/json";
 

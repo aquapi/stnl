@@ -1,4 +1,4 @@
-import { randomStr, randPick, randRemoveProp } from "./utils";
+import { randomStr, randRemoveProp } from "./utils";
 
 function trueValidator(this: { data: any }, fn: (o: any) => boolean) {
   if (!fn(this.data))

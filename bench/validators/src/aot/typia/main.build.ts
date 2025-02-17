@@ -1,3 +1,3 @@
-import { ROOT } from "@/utils";
+import { TSCONFIG } from "@utils";
 
-await Bun.$`bun typia generate --input ${import.meta.dir + '/src'} --output ${import.meta.dir + '/lib'} --project ${ROOT + '/tsconfig.json'}`;
+await Bun.$`bun typia generate --input ${import.meta.dir + '/src'} --output ${import.meta.dir + '/lib'} --project ${TSCONFIG}`;

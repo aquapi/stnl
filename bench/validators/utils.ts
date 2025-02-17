@@ -10,3 +10,4 @@ export interface Case {
 
 export const defineCase = <const T extends Case>(t: T) => t;
 export const ROOT = import.meta.dir;
+export const TSCONFIG = ROOT + '/tsconfig.json';

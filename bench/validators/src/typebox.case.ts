@@ -1,4 +1,4 @@
-import { defineCase } from "@/utils";
+import { defineCase } from "@utils";
 
 import { TypeSystemPolicy } from '@sinclair/typebox/system';
 import { Type } from '@sinclair/typebox';

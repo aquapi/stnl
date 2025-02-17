@@ -1,8 +1,10 @@
 Testing validators performance.
 
 ```sh
-bun start # Bun
+bun start:bun # Bun
 bun start:node # Node
+
+bun start # Start both
 ```
 
 ## Filter

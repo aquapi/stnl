@@ -1,4 +1,4 @@
-import { defineCase } from "@/utils";
+import { defineCase } from "@utils";
 import Ajv from "ajv/dist/jtd";
 
 export default defineCase({

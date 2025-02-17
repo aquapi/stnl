@@ -1,5 +1,5 @@
 import { summary, run, bench, do_not_optimize } from 'mitata';
-import type { Tests } from '@/utils';
+import type { Tests } from './utils';
 import tests from './tests';
 import cases from './src';
 
@@ -43,7 +43,19 @@ casesMap.forEach((val, key) => {
       for (let i = 0; i < 100; i++)
         do_not_optimize(suiteData.map(fn as any));
 
-      bench(test[0] + ` (${key})`, () => do_not_optimize(suiteData.map(fn as any))).gc('inner');
+      bench(test[0] + ` (${key})`, function* () {
+        yield {
+          [0](){
+            return suiteData;
+          },
+          [1](){
+            return fn;
+          },
+          bench(suiteData: any, fn: any) {
+            do_not_optimize(suiteData.map(fn as any))
+          }
+        }
+      });
     }
   });
 });

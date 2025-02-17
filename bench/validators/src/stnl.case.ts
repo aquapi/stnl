@@ -1,4 +1,4 @@
-import { defineCase } from "@/utils";
+import { defineCase } from "@utils";
 
 import buildValidateJson from 'stnl/compilers/validate-json/compose';
 import buildStringifyJson from 'stnl/compilers/stringify-json/compose';

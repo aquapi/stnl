@@ -1,4 +1,4 @@
-import { defineCase } from "@/utils";
+import { defineCase } from "@utils";
 import { array, boolean, number, object, string } from 'zod';
 
 export default defineCase({
