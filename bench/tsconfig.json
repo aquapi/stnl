@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "isolatedDeclarations": false,
+    // Paths
+    "paths": {
+      "stnl": ["../src/index.ts"],
+      "stnl/*": ["../src/*"],
+      "@utils": ["./utils.ts"]
+    },
+    "strictNullChecks": true,
+    "strict": true
+  }
+}

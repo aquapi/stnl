@@ -48,10 +48,7 @@ casesMap.forEach((val, key) => {
           [0](){
             return suiteData;
           },
-          [1](){
-            return fn;
-          },
-          bench(suiteData: any, fn: any) {
+          bench(suiteData: any) {
             do_not_optimize(suiteData.map(fn as any))
           }
         }

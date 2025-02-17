@@ -21,6 +21,7 @@
     "eslint": "latest",
     "eslint-plugin-jsdoc": "latest",
     "mitata": "^1.0.31",
+    "tsx": "^4.19.2",
     "typescript": "latest",
     "typescript-eslint": "latest",
     "uglify-js": "^3.19.3"
