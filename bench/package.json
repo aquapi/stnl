@@ -11,9 +11,11 @@
   },
   "scripts": {
     "prepare": "bun prepare.ts",
-    "bench": "bun index.ts",
+    "bench:bun": "bun index.ts",
     "bench:node": "bun tsx --expose-gc --allow-natives-syntax index.ts",
-    "start": "bun prepare && bun bench",
-    "start:node": "bun prepare && bun bench:node"
+    "bench": "bun bench:bun && bun bench:node",
+    "start:bun": "bun prepare && bun bench:bun",
+    "start:node": "bun prepare && bun bench:node",
+    "start": "bun prepare && bun bench"
   }
 }

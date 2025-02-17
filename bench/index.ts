@@ -3,14 +3,14 @@ import type { Tests } from '@/utils';
 import tests from './tests';
 import cases from './src';
 
-import { exclude, include } from './filter';
+import { excludeCase, includeCase, excludeTest, includeTest } from './filter';
 
 const casesMap = new Map<string, [string, Tests[keyof Tests]][]>();
 
 // Map cases
 for (const c of cases) {
   const name = c.name;
-  if (exclude(name) || !include(name)) continue;
+  if (excludeCase(name) || !includeCase(name)) continue;
 
   for (const test in c.tests) {
     const fn = c.tests[test as keyof typeof c.tests];
@@ -24,6 +24,8 @@ for (const c of cases) {
 
 // Register to mitata
 casesMap.forEach((val, key) => {
+  if (excludeTest(key as any) || !includeTest(key as any)) return;
+
   summary(() => {
     console.log('Validating:', key);
 
